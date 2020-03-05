@@ -1,9 +1,9 @@
 ---
 title: "Spatio-Temporal_patterns_Bactrocera-dorsalis"
 output:
-  pdf_document: default
   html_document: 
     keep_md: yes
+  pdf_document: default
   word_document: default
 ---
 

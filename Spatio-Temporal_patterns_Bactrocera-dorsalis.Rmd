@@ -670,3 +670,43 @@ spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, typ
 
 
 ```
+
+
+## Mapping the Abundance
+```{r}
+
+#library(devtools)
+#install_github("ropensci/rnaturalearthhires")
+
+
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rnaturalearthhires)
+library(sf)
+library(sp)
+
+benin <- ne_states(country = "Benin", returnclass = "sf") 
+class(benin)
+
+ggplot(data = benin) +
+geom_sf()#+
+#geom_sf_text(aes(label = name), size = 2, color = "blue") 
+
+
+#world <- ne_countries(scale = "medium", returnclass = "sf")
+#class(world)
+#benin1 <- filter(world, name == "Benin")
+#ggplot(data = benin1) +
+#geom_sf()
+
+
+```
+
+
+
+
+
+
+
+
+

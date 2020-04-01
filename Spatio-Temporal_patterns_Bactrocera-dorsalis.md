@@ -37,7 +37,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Attaching packages -------------------------------------------------------------------------- tidyverse 1.3.0 --
+## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
 ```
 
 ```
@@ -48,7 +48,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Conflicts ----------------------------------------------------------------------------- tidyverse_conflicts() --
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
 ## x ggplot2::%+%()   masks psych::%+%()
 ## x ggplot2::alpha() masks psych::alpha()
 ## x dplyr::filter()  masks stats::filter()
@@ -2526,3 +2526,83 @@ NB
 ```r
 spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, type = "response"),0)
 ```
+
+
+## Mapping the Abundance
+
+```r
+#library(devtools)
+#install_github("ropensci/rnaturalearthhires")
+
+
+library(rnaturalearth)
+```
+
+```
+## Warning: package 'rnaturalearth' was built under R version 3.6.3
+```
+
+```r
+library(rnaturalearthdata)
+```
+
+```
+## Warning: package 'rnaturalearthdata' was built under R version 3.6.3
+```
+
+```r
+library(rnaturalearthhires)
+library(sf)
+```
+
+```
+## Warning: package 'sf' was built under R version 3.6.3
+```
+
+```
+## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3
+```
+
+```r
+library(sp)
+```
+
+```
+## Warning: package 'sp' was built under R version 3.6.3
+```
+
+```r
+benin <- ne_states(country = "Benin", returnclass = "sf") 
+class(benin)
+```
+
+```
+## [1] "sf"         "data.frame"
+```
+
+```r
+ggplot(data = benin) +
+geom_sf()#+
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+```r
+#geom_sf_text(aes(label = name), size = 2, color = "blue") 
+
+
+#world <- ne_countries(scale = "medium", returnclass = "sf")
+#class(world)
+#benin1 <- filter(world, name == "Benin")
+#ggplot(data = benin1) +
+#geom_sf()
+```
+
+
+
+
+
+
+
+
+

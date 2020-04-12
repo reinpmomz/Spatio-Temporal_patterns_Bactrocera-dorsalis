@@ -97,13 +97,13 @@ head(spacioTemp_dt)
 ## 4          FSM       Ketou      July 2008     29.8     22.6   96.5   67.1
 ## 5          FSM       Ketou      July 2008     29.8     22.6   96.5   67.1
 ## 6          FSM        Lalo      July 2008     29.8     22.6   96.5   67.1
-##   Rainfall Attractant Trap B_dorsa Tempmean RHmean Season
-## 1    121.8         ME    1     130     27.9   75.2    Dry
-## 2    121.8         ME    2      80     27.9   75.2    Dry
-## 3    136.5         ME    1     497     26.5   82.0  Rainy
-## 4      0.0         ME    1    7758     26.2   81.8  Rainy
-## 5      0.0         ME    2    5867     26.2   81.8  Rainy
-## 6      0.0         ME    1    1136     26.2   81.8  Rainy
+##   Rainfall Attractant Trap B_dorsa latitude longitude Tempmean RHmean Season
+## 1    121.8         ME    1     130 7.750000  2.382899     27.9   75.2    Dry
+## 2    121.8         ME    2      80 7.750000  2.382899     27.9   75.2    Dry
+## 3    136.5         ME    1     497 7.750000  2.382899     26.5   82.0  Rainy
+## 4      0.0         ME    1    7758 7.363320  2.599780     26.2   81.8  Rainy
+## 5      0.0         ME    2    5867 7.363320  2.599780     26.2   81.8  Rainy
+## 6      0.0         ME    1    1136 6.930065  1.878530     26.2   81.8  Rainy
 ```
 
 ```r
@@ -118,13 +118,20 @@ tail(spacioTemp_dt)
 ## 1164          FSM      Ketou November 2008     34.4     24.1   25.7   47.4
 ## 1165          FSM       Lalo November 2008     34.4     24.1   25.7   47.4
 ## 1166          FSM       Lalo November 2008     34.4     24.1   25.7   47.4
-##      Rainfall Attractant Trap B_dorsa Tempmean RHmean Season
-## 1161    253.0         ME    1    2973     25.9   25.9  Rainy
-## 1162    253.0         ME    2    2787     25.9   25.9  Rainy
-## 1163      0.0         ME    1     176     29.2   36.5    Dry
-## 1164      0.0         ME    2     174     29.2   36.5    Dry
-## 1165      7.5         ME    1     159     29.2   36.5    Dry
-## 1166      7.5         ME    2      90     29.2   36.5    Dry
+##      Rainfall Attractant Trap B_dorsa  latitude longitude Tempmean RHmean
+## 1161    253.0         ME    1    2973 10.304160   1.37962     25.9   25.9
+## 1162    253.0         ME    2    2787 10.304160   1.37962     25.9   25.9
+## 1163      0.0         ME    1     176  7.363320   2.59978     29.2   36.5
+## 1164      0.0         ME    2     174  7.363320   2.59978     29.2   36.5
+## 1165      7.5         ME    1     159  6.930065   1.87853     29.2   36.5
+## 1166      7.5         ME    2      90  6.930065   1.87853     29.2   36.5
+##      Season
+## 1161  Rainy
+## 1162  Rainy
+## 1163    Dry
+## 1164    Dry
+## 1165    Dry
+## 1166    Dry
 ```
 
 ```r
@@ -133,7 +140,7 @@ ncol(spacioTemp_dt)
 ```
 
 ```
-## [1] 15
+## [1] 17
 ```
 
 ```r
@@ -167,7 +174,7 @@ str(spacioTemp_dt)
 ```
 
 ```
-## 'data.frame':	1166 obs. of  15 variables:
+## 'data.frame':	1166 obs. of  17 variables:
 ##  $ Agro_ecology: Factor w/ 3 levels "FSM","NGS","SGS": 3 3 3 1 1 1 1 2 2 2 ...
 ##  $ Site        : Factor w/ 14 levels "Akofodjoule",..: 1 1 1 6 6 7 7 9 9 9 ...
 ##  $ Month       : Factor w/ 12 levels "April","August",..: 11 11 12 6 6 6 6 2 2 2 ...
@@ -180,6 +187,8 @@ str(spacioTemp_dt)
 ##  $ Attractant  : Factor w/ 1 level "ME": 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ Trap        : int  1 2 1 1 2 1 2 1 2 3 ...
 ##  $ B_dorsa     : int  130 80 497 7758 5867 1136 1623 9587 5175 6520 ...
+##  $ latitude    : num  7.75 7.75 7.75 7.36 7.36 ...
+##  $ longitude   : num  2.38 2.38 2.38 2.6 2.6 ...
 ##  $ Tempmean    : num  27.9 27.9 26.5 26.2 26.2 26.2 26.2 25.4 25.4 25.4 ...
 ##  $ RHmean      : num  75.2 75.2 82 81.8 81.8 81.8 81.8 83.4 83.4 83.4 ...
 ##  $ Season      : Factor w/ 2 levels "Rainy","Dry": 2 2 1 1 1 1 1 1 1 1 ...
@@ -206,7 +215,7 @@ length(spacioTemp_dt)
 ```
 
 ```
-## [1] 15
+## [1] 17
 ```
 
 ```r
@@ -216,7 +225,8 @@ names(spacioTemp_dt) #display variable names
 ```
 ##  [1] "Agro_ecology" "Site"         "Month"        "Year"         "TempMaxi"    
 ##  [6] "TempMini"     "RHMaxi"       "RHMini"       "Rainfall"     "Attractant"  
-## [11] "Trap"         "B_dorsa"      "Tempmean"     "RHmean"       "Season"
+## [11] "Trap"         "B_dorsa"      "latitude"     "longitude"    "Tempmean"    
+## [16] "RHmean"       "Season"
 ```
 
 ```r
@@ -2528,11 +2538,42 @@ spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, typ
 ```
 
 
-## Mapping the Abundance
+## Mapping the Abundance of B_Dorsa
 
 ```r
 #library(devtools)
 #install_github("ropensci/rnaturalearthhires")
+
+spacioTemp_dtnew <- spacioTemp_dt
+spacioTemp_dtnew$Site <- gsub("Alafiarou1", "Alafiarou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Alafiarou2", "Alafiarou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Tchourou1", "Tchourou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Tchourou2", "Tchourou", spacioTemp_dtnew$Site)
+
+spacioTemp_dtnew$Agro_ecology <- factor(spacioTemp_dtnew$Agro_ecology, levels = c("1","2","3"), 
+                               labels = c("SGS","FSM","NGS"))
+
+spacioTemp_dtnew$Season <- factor(spacioTemp_dtnew$Season, levels = c("1","2"), 
+                               labels = c("Dry","Rainy"))
+
+
+spacioTemp_dt1 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'Season', 'latitude' , 'longitude')]
+spacioTemp_dt1$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt1,FUN=sum)
+spacioTemp_dt1 <- spacioTemp_dt1[!duplicated(spacioTemp_dt1),]
+
+
+spacioTemp_dt2 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'latitude' , 'longitude')]
+spacioTemp_dt2$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt2,FUN=sum)
+spacioTemp_dt2 <- spacioTemp_dt2[!duplicated(spacioTemp_dt2),]
+
+
+spacioTemp_dt3 <- spacioTemp_dtnew[,c('Site', 'latitude' , 'longitude')]
+spacioTemp_dt3$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt3,FUN=sum)
+spacioTemp_dt3 <- spacioTemp_dt3[!duplicated(spacioTemp_dt3),]
+
+spacioTemp_dt4 <- spacioTemp_dtnew[,c('Site', 'Season', 'latitude' , 'longitude')]
+spacioTemp_dt4$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt4,FUN=sum)
+spacioTemp_dt4 <- spacioTemp_dt4[!duplicated(spacioTemp_dt4),]
 
 
 library(rnaturalearth)
@@ -2572,6 +2613,50 @@ library(sp)
 ```
 
 ```r
+beninNESW <- ne_countries(country = c("Benin", "Nigeria", "Niger", "Togo", "Burkina Faso" ), returnclass = "sf") 
+class(beninNESW)
+```
+
+```
+## [1] "sf"         "data.frame"
+```
+
+```r
+ggplot(data = beninNESW) +
+geom_sf()+
+geom_sf_text(aes(label = name), size = 2, color = "blue")
+```
+
+```
+## Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
+## give correct results for longitude/latitude data
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+```r
+benin1 <- ne_states(country = "Benin", returnclass = "sf") 
+class(benin1)
+```
+
+```
+## [1] "sf"         "data.frame"
+```
+
+```r
+ggplot(data = benin1) +
+geom_sf()+
+geom_sf_text(aes(label = name), size = 2, color = "blue") 
+```
+
+```
+## Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
+## give correct results for longitude/latitude data
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-2.png)<!-- -->
+
+```r
 benin <- ne_states(country = "Benin", returnclass = "sf") 
 class(benin)
 ```
@@ -2582,21 +2667,26 @@ class(benin)
 
 ```r
 ggplot(data = benin) +
-geom_sf()#+
+geom_sf()+
+ggtitle("Site Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))+
+scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
 
 ```r
-#geom_sf_text(aes(label = name), size = 2, color = "blue") 
-
-
-#world <- ne_countries(scale = "medium", returnclass = "sf")
-#class(world)
-#benin1 <- filter(world, name == "Benin")
-#ggplot(data = benin1) +
-#geom_sf()
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology)) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))
 ```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-4.png)<!-- -->
 
 
 

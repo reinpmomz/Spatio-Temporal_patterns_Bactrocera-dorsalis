@@ -672,11 +672,42 @@ spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, typ
 ```
 
 
-## Mapping the Abundance
+## Mapping the Abundance of B_Dorsa
 ```{r}
 
 #library(devtools)
 #install_github("ropensci/rnaturalearthhires")
+
+spacioTemp_dtnew <- spacioTemp_dt
+spacioTemp_dtnew$Site <- gsub("Alafiarou1", "Alafiarou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Alafiarou2", "Alafiarou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Tchourou1", "Tchourou", spacioTemp_dtnew$Site)
+spacioTemp_dtnew$Site <- gsub("Tchourou2", "Tchourou", spacioTemp_dtnew$Site)
+
+spacioTemp_dtnew$Agro_ecology <- factor(spacioTemp_dtnew$Agro_ecology, levels = c("1","2","3"), 
+                               labels = c("SGS","FSM","NGS"))
+
+spacioTemp_dtnew$Season <- factor(spacioTemp_dtnew$Season, levels = c("1","2"), 
+                               labels = c("Dry","Rainy"))
+
+
+spacioTemp_dt1 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'Season', 'latitude' , 'longitude')]
+spacioTemp_dt1$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt1,FUN=sum)
+spacioTemp_dt1 <- spacioTemp_dt1[!duplicated(spacioTemp_dt1),]
+
+
+spacioTemp_dt2 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'latitude' , 'longitude')]
+spacioTemp_dt2$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt2,FUN=sum)
+spacioTemp_dt2 <- spacioTemp_dt2[!duplicated(spacioTemp_dt2),]
+
+
+spacioTemp_dt3 <- spacioTemp_dtnew[,c('Site', 'latitude' , 'longitude')]
+spacioTemp_dt3$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt3,FUN=sum)
+spacioTemp_dt3 <- spacioTemp_dt3[!duplicated(spacioTemp_dt3),]
+
+spacioTemp_dt4 <- spacioTemp_dtnew[,c('Site', 'Season', 'latitude' , 'longitude')]
+spacioTemp_dt4$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt4,FUN=sum)
+spacioTemp_dt4 <- spacioTemp_dt4[!duplicated(spacioTemp_dt4),]
 
 
 library(rnaturalearth)
@@ -685,19 +716,39 @@ library(rnaturalearthhires)
 library(sf)
 library(sp)
 
+beninNESW <- ne_countries(country = c("Benin", "Nigeria", "Niger", "Togo", "Burkina Faso" ), returnclass = "sf") 
+class(beninNESW)
+
+ggplot(data = beninNESW) +
+geom_sf()+
+geom_sf_text(aes(label = name), size = 2, color = "blue")
+
+
+benin1 <- ne_states(country = "Benin", returnclass = "sf") 
+class(benin1)
+
+ggplot(data = benin1) +
+geom_sf()+
+geom_sf_text(aes(label = name), size = 2, color = "blue") 
+
+
 benin <- ne_states(country = "Benin", returnclass = "sf") 
 class(benin)
 
 ggplot(data = benin) +
-geom_sf()#+
-#geom_sf_text(aes(label = name), size = 2, color = "blue") 
+geom_sf()+
+ggtitle("Site Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))+
+scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)
 
-
-#world <- ne_countries(scale = "medium", returnclass = "sf")
-#class(world)
-#benin1 <- filter(world, name == "Benin")
-#ggplot(data = benin1) +
-#geom_sf()
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology)) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))
 
 
 ```

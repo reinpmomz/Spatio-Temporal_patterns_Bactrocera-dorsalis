@@ -37,7 +37,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
+## -- Attaching packages ------------------------------------------------------------------ tidyverse 1.3.0 --
 ```
 
 ```
@@ -48,7 +48,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## -- Conflicts --------------------------------------------------------------------- tidyverse_conflicts() --
 ## x ggplot2::%+%()   masks psych::%+%()
 ## x ggplot2::alpha() masks psych::alpha()
 ## x dplyr::filter()  masks stats::filter()
@@ -2613,6 +2613,8 @@ library(sp)
 ```
 
 ```r
+library(ggrepel)
+
 beninNESW <- ne_countries(country = c("Benin", "Nigeria", "Niger", "Togo", "Burkina Faso" ), returnclass = "sf") 
 class(beninNESW)
 ```
@@ -2672,7 +2674,8 @@ ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
 legend.title = element_text(colour="blue", size=10, face="bold"))+
-scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)
+scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
+  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8), size=2.2, point.padding = NA)
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
@@ -2683,7 +2686,8 @@ geom_sf()+
 ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology)) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))
+legend.title = element_text(colour="blue", size=10, face="bold"))+
+  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8), size=2.2, point.padding = NA)
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-4.png)<!-- -->

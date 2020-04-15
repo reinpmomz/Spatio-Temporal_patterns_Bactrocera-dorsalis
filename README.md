@@ -17,7 +17,7 @@ The dependent variable under consideration is the abundance of Bactrocera dorsal
 
 - Map the abundance and seasonal effect variation of Bactrocera dorsalis in Benin in the three agro-ecologies.
 
-Mapping will be based on the two seasons in Benin and the three agro-ecologies over the period of 6 years that the data was collected. The spatial distribution within the time period will be shown across the three agro-ecologies during the different seasons. The mapping will be done separately for each of the two seasons and in each agro-ecology. The dry season occurs from October to April and rainy season occurs from May to September. Each agro-ecology will be mapped in accordance with the data collection sites. For, the Forest Savannah Mosaic (FSM) the sites will be: Iloulofin, Ketou, and Lalo. The sites in the Southern Guinea Savannah will be: Akofoudjole, Alifarou, Bassila, Mondjigagan, and Tchourou. In addition the sites in Northern Guinea Savannah will be: Natitingou, Ndali , Parakou and Papatia.
+Mapping will be based on the two seasons in Benin and the three agro-ecologies over the period of 6 years that the data was collected. The spatial distribution within the time period will be shown across the three agro-ecologies during the different seasons. The mapping will be done separately for each of the two seasons and in each agro-ecology. Each agro-ecology will be mapped in accordance with the data collection sites. 
 The semi-variogram will be used to depict the spatial autocorrelation of the data. Geo-referencing will be done to obtain the coordinates of the different sites in the three agro-ecologies.  Before geo-referencing, the sites which are replicated will first be made the same so that that they can be georeferenced only once
 
 

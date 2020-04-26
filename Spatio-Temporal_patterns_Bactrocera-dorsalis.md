@@ -2675,7 +2675,8 @@ geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
 legend.title = element_text(colour="blue", size=10, face="bold"))+
 scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
-  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8), size=2.2, point.padding = NA)
+  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
@@ -2683,14 +2684,73 @@ scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
 ```r
 ggplot(data = benin) +
 geom_sf()+
-ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
-geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology)) +
+ggtitle("Site Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, size=TotalB_dorsa), colour="red")+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
 legend.title = element_text(colour="blue", size=10, face="bold"))+
-  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8), size=2.2, point.padding = NA)
+  geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-4.png)<!-- -->
+
+```r
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))+
+  geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-5.png)<!-- -->
+
+```r
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
+  facet_wrap(~Agro_ecology) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))+ 
+  guides(color = FALSE)+
+  geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-6.png)<!-- -->
+
+```r
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Season Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt4, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Season))+ 
+  facet_wrap(~Season) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"))+
+  guides(color = FALSE)+
+  geom_text_repel(data=spacioTemp_dt4, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-7.png)<!-- -->
+
+```r
+ggplot(data = benin) +
+geom_sf()+
+ggtitle("Agro Ecology/Season Abundance of Bactrocera dorsalis") +
+geom_point(data=spacioTemp_dt1, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+ 
+  facet_grid(Season~Agro_ecology) +
+theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(angle = 90, size = 7))+
+  guides(color = FALSE)+
+  geom_text_repel(data=spacioTemp_dt1, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
+                  size=2.2, point.padding = NA)
+```
+
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-8.png)<!-- -->
 
 
 

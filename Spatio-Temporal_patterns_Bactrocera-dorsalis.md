@@ -1,5 +1,7 @@
 ---
 title: "Spatio-Temporal_patterns_Bactrocera-dorsalis"
+author: "Reinp"
+date: "2020-05-02"
 output:
   html_document: 
     keep_md: yes
@@ -8,6 +10,20 @@ output:
 ---
 
 # R Programming: Spatio-Temporal_patterns_Bactrocera-dorsalis
+
+
+## Set chunk requirements
+
+```r
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+#echo=FALSE indicates that the code will not be shown in the final document 
+#(though any results/output would still be displayed).
+
+#include=FALSE to have the chunk evaluated, but neither the code nor its output displayed
+
+# warning=FALSE and message=FALSE suppress any R warnings or messages from being included 
+#in the final document
+```
 
 
 ## loading Relevant packages and Data Set
@@ -19,43 +35,8 @@ output:
 library(stats)
 library(psych)
 library(ggplot2)
-```
-
-```
-## 
-## Attaching package: 'ggplot2'
-```
-
-```
-## The following objects are masked from 'package:psych':
-## 
-##     %+%, alpha
-```
-
-```r
 library(tidyverse)
-```
 
-```
-## -- Attaching packages ------------------------------------------------------------------ tidyverse 1.3.0 --
-```
-
-```
-## v tibble  2.1.3     v dplyr   0.8.3
-## v tidyr   1.0.0     v stringr 1.4.0
-## v readr   1.3.1     v forcats 0.4.0
-## v purrr   0.3.3
-```
-
-```
-## -- Conflicts --------------------------------------------------------------------- tidyverse_conflicts() --
-## x ggplot2::%+%()   masks psych::%+%()
-## x ggplot2::alpha() masks psych::alpha()
-## x dplyr::filter()  masks stats::filter()
-## x dplyr::lag()     masks stats::lag()
-```
-
-```r
 # Reading our dataset
 setwd('E:/Documents/Reinp/GitHub Respositories/Spatio-Temporal_patterns_Bactrocera-dorsalis')
 
@@ -163,13 +144,8 @@ help(spacioTemp_dt)
 
 ```r
 ??spacioTemp_dt
-```
 
-```
-## starting httpd help server ... done
-```
 
-```r
 str(spacioTemp_dt)
 ```
 
@@ -445,120 +421,7 @@ summary(spacioTemp_dt$RHmean)
 ```r
 #FormulaSyntax
 library(mosaic) 
-```
 
-```
-## Loading required package: lattice
-```
-
-```
-## Loading required package: ggformula
-```
-
-```
-## Loading required package: ggstance
-```
-
-```
-## 
-## Attaching package: 'ggstance'
-```
-
-```
-## The following objects are masked from 'package:ggplot2':
-## 
-##     geom_errorbarh, GeomErrorbarh
-```
-
-```
-## 
-## New to ggformula?  Try the tutorials: 
-## 	learnr::run_tutorial("introduction", package = "ggformula")
-## 	learnr::run_tutorial("refining", package = "ggformula")
-```
-
-```
-## Loading required package: mosaicData
-```
-
-```
-## Loading required package: Matrix
-```
-
-```
-## 
-## Attaching package: 'Matrix'
-```
-
-```
-## The following objects are masked from 'package:tidyr':
-## 
-##     expand, pack, unpack
-```
-
-```
-## Registered S3 method overwritten by 'mosaic':
-##   method                           from   
-##   fortify.SpatialPolygonsDataFrame ggplot2
-```
-
-```
-## 
-## The 'mosaic' package masks several functions from core packages in order to add 
-## additional features.  The original behavior of these functions should not be affected by this.
-## 
-## Note: If you use the Matrix package, be sure to load it BEFORE loading mosaic.
-```
-
-```
-## 
-## Attaching package: 'mosaic'
-```
-
-```
-## The following object is masked from 'package:Matrix':
-## 
-##     mean
-```
-
-```
-## The following objects are masked from 'package:dplyr':
-## 
-##     count, do, tally
-```
-
-```
-## The following object is masked from 'package:purrr':
-## 
-##     cross
-```
-
-```
-## The following object is masked from 'package:ggplot2':
-## 
-##     stat
-```
-
-```
-## The following objects are masked from 'package:psych':
-## 
-##     logit, rescale
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     binom.test, cor, cor.test, cov, fivenum, IQR, median, prop.test,
-##     quantile, sd, t.test, var
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     max, mean, min, prod, range, sample, sum
-```
-
-```r
 ##one continous variable
 #mean(~TempMaxi, data=spacioTemp_dt)
 #median(~TempMaxi, data=spacioTemp_dt)
@@ -1293,57 +1156,8 @@ favstats(B_dorsa~Season+Agro_ecology, data=spacioTemp_dt)
 
 ```r
 library(car)
-```
-
-```
-## Loading required package: carData
-```
-
-```
-## 
-## Attaching package: 'car'
-```
-
-```
-## The following objects are masked from 'package:mosaic':
-## 
-##     deltaMethod, logit
-```
-
-```
-## The following object is masked from 'package:dplyr':
-## 
-##     recode
-```
-
-```
-## The following object is masked from 'package:purrr':
-## 
-##     some
-```
-
-```
-## The following object is masked from 'package:psych':
-## 
-##     logit
-```
-
-```r
 library(MASS) #So that distributions that must be non-zero can make sense of my data
-```
 
-```
-## 
-## Attaching package: 'MASS'
-```
-
-```
-## The following object is masked from 'package:dplyr':
-## 
-##     select
-```
-
-```r
 qqp(spacioTemp_dt$B_dorsa+1, "norm", main="Q-Q Plot ~ B_dorsa+1 Normal model")
 ```
 
@@ -1423,17 +1237,6 @@ gamma$estimate[[2]], main="Q-Q Plot ~ B_dorsa+1 Gamma model")
 
 ```r
 weibull <- fitdistr(spacioTemp_dt$B_dorsa+1, "weibull")
-```
-
-```
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-```
-
-```r
 qqp(spacioTemp_dt$B_dorsa+1, "weibull", shape = weibull$estimate[[1]], 
     scale=weibull$estimate[[2]], main="Q-Q Plot ~ B_dorsa+1 Weibull model")
 ```
@@ -1455,11 +1258,6 @@ ks.test(spacioTemp_dt$B_dorsa, "pgamma", paraw$estimate[1], paraw$estimate[2])
 ```
 
 ```
-## Warning in ks.test(spacioTemp_dt$B_dorsa, "pgamma", paraw$estimate[1],
-## paraw$estimate[2]): ties should not be present for the Kolmogorov-Smirnov test
-```
-
-```
 ## 
 ## 	One-sample Kolmogorov-Smirnov test
 ## 
@@ -1471,19 +1269,6 @@ ks.test(spacioTemp_dt$B_dorsa, "pgamma", paraw$estimate[1], paraw$estimate[2])
 ```r
 # Estimate a weilbull proba
 paraw <- fitdistr(spacioTemp_dt$B_dorsa[spacioTemp_dt$B_dorsa!=0],densfun="weibull")
-```
-
-```
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-
-## Warning in densfun(x, parm[1], parm[2], ...): NaNs produced
-```
-
-```r
 curve(dweibull(x, paraw$estimate[1], paraw$estimate[2]), 0,15900, add=TRUE, col="red")
 ```
 
@@ -1491,11 +1276,6 @@ curve(dweibull(x, paraw$estimate[1], paraw$estimate[2]), 0,15900, add=TRUE, col=
 
 ```r
 ks.test(spacioTemp_dt$B_dorsa, "pweibull", paraw$estimate[1], paraw$estimate[2])
-```
-
-```
-## Warning in ks.test(spacioTemp_dt$B_dorsa, "pweibull", paraw$estimate[1], : ties
-## should not be present for the Kolmogorov-Smirnov test
 ```
 
 ```
@@ -1566,24 +1346,7 @@ summary(Dorsa.output)
 
 library(sandwich)
 library(lmtest)
-```
 
-```
-## Loading required package: zoo
-```
-
-```
-## 
-## Attaching package: 'zoo'
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     as.Date, as.Date.numeric
-```
-
-```r
 coeftest(Dorsa.output, vcov = sandwich)
 ```
 
@@ -1800,18 +1563,7 @@ lrtest(Dorsa.output, Dorsa.output2)
 # "y ~ ." is the same as "y ~ . | ."
 
 library(pscl)
-```
 
-```
-## Classes and Methods for R developed in the
-## Political Science Computational Laboratory
-## Department of Political Science
-## Stanford University
-## Simon Jackman
-## hurdle and zeroinfl functions by Achim Zeileis
-```
-
-```r
 Dorsa.output3 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season , data = spacioTemp_dt,  dist = "negbin")
@@ -1931,19 +1683,6 @@ table(spacioTemp_dt$B_dorsa > 0)
 Dorsa.output4 <- zeroinfl(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season , data = spacioTemp_dt,  dist = "negbin", method="L-BFGS-B")
-```
-
-```
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-```
-
-```
-## Warning in optim(fn = loglikfun, gr = gradfun, par = c(start$count,
-## start$zero, : method L-BFGS-B uses 'factr' (and 'pgtol') instead of 'reltol' and
-## 'abstol'
-```
-
-```r
 summary(Dorsa.output4)
 ```
 
@@ -1989,15 +1728,7 @@ summary(Dorsa.output4)
 ```r
 Dorsa.output4h <- zeroinfl(formula = B_dorsa ~  Tempmean + RHmean | Tempmean + RHmean ,
                            data = spacioTemp_dt,  dist = "negbin", method="L-BFGS-B")
-```
 
-```
-## Warning in optim(fn = loglikfun, gr = gradfun, par = c(start$count,
-## start$zero, : method L-BFGS-B uses 'factr' (and 'pgtol') instead of 'reltol' and
-## 'abstol'
-```
-
-```r
 #comparing to the full model in a Wald test
 
 waldtest(Dorsa.output4, Dorsa.output4h)
@@ -2272,10 +2003,6 @@ summary(Dorsa.output22)
 ```
 
 ```
-## Waiting for profiling to be done...
-```
-
-```
 ##                   Estimate        2.5 %       97.5 %
 ## (Intercept)    7.053827498  5.212912091  8.900508319
 ## Rainfall       0.002804711  0.001706701  0.003907246
@@ -2386,13 +2113,6 @@ lrtest(Dorsa.output22, Dorsa.output22A)
 
 
 Dorsa.output22S <- update(Dorsa.output22, . ~ . - Season)
-```
-
-```
-## Warning: glm.fit: algorithm did not converge
-```
-
-```r
 anova(Dorsa.output22, Dorsa.output22S)
 ```
 
@@ -2471,11 +2191,6 @@ pchisq(2 * (logLik(Dorsa.output22) - logLik(Dorsa.output0)), df = 1, lower.tail 
 
 #or an LR test
 lrtest(Dorsa.output22, Dorsa.output0)
-```
-
-```
-## Warning in modelUpdate(objects[[i - 1]], objects[[i]]): original model was of
-## class "negbin", updated model is of class "glm"
 ```
 
 ```
@@ -2577,42 +2292,10 @@ spacioTemp_dt4 <- spacioTemp_dt4[!duplicated(spacioTemp_dt4),]
 
 
 library(rnaturalearth)
-```
-
-```
-## Warning: package 'rnaturalearth' was built under R version 3.6.3
-```
-
-```r
 library(rnaturalearthdata)
-```
-
-```
-## Warning: package 'rnaturalearthdata' was built under R version 3.6.3
-```
-
-```r
 library(rnaturalearthhires)
 library(sf)
-```
-
-```
-## Warning: package 'sf' was built under R version 3.6.3
-```
-
-```
-## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3
-```
-
-```r
 library(sp)
-```
-
-```
-## Warning: package 'sp' was built under R version 3.6.3
-```
-
-```r
 library(ggrepel)
 
 beninNESW <- ne_countries(country = c("Benin", "Nigeria", "Niger", "Togo", "Burkina Faso" ), returnclass = "sf") 
@@ -2626,12 +2309,8 @@ class(beninNESW)
 ```r
 ggplot(data = beninNESW) +
 geom_sf()+
-geom_sf_text(aes(label = name), size = 2, color = "blue")
-```
-
-```
-## Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
-## give correct results for longitude/latitude data
+geom_sf_text(aes(label = name), size = 2, color = "blue")+
+  labs(x="longitude", y="latitude")
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
@@ -2648,12 +2327,9 @@ class(benin1)
 ```r
 ggplot(data = benin1) +
 geom_sf()+
-geom_sf_text(aes(label = name), size = 2, color = "blue") 
-```
-
-```
-## Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
-## give correct results for longitude/latitude data
+geom_sf_text(aes(label = name), size = 2, color = "blue")+
+  labs(x="longitude", y="latitude") +
+  theme(axis.text.x = element_text(size = 8))
 ```
 
 ![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-2.png)<!-- -->
@@ -2673,7 +2349,7 @@ geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))+
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
 scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
@@ -2687,7 +2363,7 @@ geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, size=TotalB_dorsa), colour="red")+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))+
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
@@ -2700,7 +2376,7 @@ geom_sf()+
 ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))+
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
@@ -2714,7 +2390,7 @@ ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
   facet_wrap(~Agro_ecology) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))+ 
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+ 
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
@@ -2729,7 +2405,7 @@ ggtitle("Season Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt4, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Season))+ 
   facet_wrap(~Season) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"))+
+legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt4, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)

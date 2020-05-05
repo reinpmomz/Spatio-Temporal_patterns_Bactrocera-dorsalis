@@ -1,7 +1,7 @@
 ---
 title: "Spatio-Temporal_patterns_Bactrocera-dorsalis"
 author: "Reinp"
-date: "2020-05-02"
+date: "2020-05-05"
 output:
   html_document: 
     keep_md: yes
@@ -9,7 +9,7 @@ output:
   word_document: default
 ---
 
-# R Programming: Spatio-Temporal_patterns_Bactrocera-dorsalis
+# R Programming
 
 
 ## Set chunk requirements

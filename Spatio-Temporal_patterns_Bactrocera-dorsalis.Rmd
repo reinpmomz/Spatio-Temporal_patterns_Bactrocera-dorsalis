@@ -9,7 +9,7 @@ output:
   word_document: default
 ---
 
-# R Programming: Spatio-Temporal_patterns_Bactrocera-dorsalis
+# R Programming
 
 
 ## Set chunk requirements

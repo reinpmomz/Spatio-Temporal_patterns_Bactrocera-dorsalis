@@ -36,28 +36,21 @@ library(ggplot2)
 library(tidyverse)
 
 # Reading our dataset
-setwd('E:/Documents/Reinp/GitHub Respositories/Spatio-Temporal_patterns_Bactrocera-dorsalis')
+setwd('F:/Documents/Reinp/GitHub Respositories/Spatio-Temporal_patterns_Bactrocera-dorsalis')
 
-spacioTemp_dt<-read.table('Male_lures.csv', header=TRUE,sep=",")
-View(spacioTemp_dt)
-attach(spacioTemp_dt)
+spacioTemp_dt_raw <- read_csv('Male_lures.csv')
+View(spacioTemp_dt_raw)
+
 ```
 
 ```{R}
 #Add tempeaturemean, humididy mean and Season columns
-#apply() function
-spacioTemp_dt$Tempmean <- apply(spacioTemp_dt[,c('TempMaxi',
-                          'TempMini')], 1, function(x) round(mean(x), 1))
-spacioTemp_dt$RHmean <- apply(spacioTemp_dt[,c('RHMaxi', 'RHMini')], 1,
-                              function(x) round(mean(x), 1))
 
-spacioTemp_dt$Season <- spacioTemp_dt$Month == "May" | spacioTemp_dt$Month == "June" | 
-  spacioTemp_dt$Month == "July" |  spacioTemp_dt$Month == "August" |  
-  spacioTemp_dt$Month == "September"
-
-spacioTemp_dt$Season <- factor(spacioTemp_dt$Season, levels = c("TRUE","FALSE"), 
-                               labels = c("Rainy","Dry"))                          
-
+spacioTemp_dt <- spacioTemp_dt_raw%>%
+ mutate(Tempmean = round((TempMaxi + TempMini)/2,1))%>%
+ mutate(RHmean = round((RHMaxi + RHMini)/2,1))%>%
+ mutate(Season = if_else(Month == "May" | Month == "June" | Month == "July" | 
+                          Month == "August" |  Month == "September", "Rainy","Dry")) 
 
 ```
 
@@ -294,161 +287,368 @@ ks.test(spacioTemp_dt$B_dorsa, "pweibull", paraw$estimate[1], paraw$estimate[2])
 
 ```
 
-## fitting the Poison model: Quantitative Quantitative
+
+## fitting the Poison model
 
 ```{R}
 
-spacioTemp_dt$Agro_ecology <- factor(spacioTemp_dt$Agro_ecology, levels = c("SGS","FSM","NGS"), 
-                               labels = c("1","2","3"))
+spacioTemp_dt <- spacioTemp_dt%>%
+ mutate(Agro_ecology = factor(Agro_ecology, levels = c("SGS","FSM","NGS"), 
+                               labels = c("1","2","3")))%>%
+mutate(Season = factor(Season, levels = c("Dry","Rainy"), 
+                               labels = c("1","2")))
 
-spacioTemp_dt$Season <- factor(spacioTemp_dt$Season, levels = c("Dry","Rainy"), 
-                               labels = c("1","2"))
+```
 
-#Model to be used in the modelling of seasonal abundance of Bactrocera dorsalis in Benin
-#is the Poisson regression model since the abundance of 
-#Bactrocera dorsalis is discrete count data. 
+
+Model to be used in the modelling of seasonal abundance of Bactrocera dorsalis in Benin
+is the Poisson regression model since the abundance of Bactrocera dorsalis is discrete count data. 
+
+
+```{R}
 
 Dorsa.output <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt, family = poisson)
 summary(Dorsa.output)
 
 
-#All coefficient estimates are highly significant. 
-#the Wald test results might be too optimistic due to a misspecification of the likelihood. 
+```
+All coefficient estimates are highly significant. The Wald test results might be too optimistic due to a misspecification of the likelihood.
 
-#As over-dispersion is present in this data set, we re-compute the Wald tests using sandwich 
-#standard errors
+We see that the model obviously doesn't fit the data. The five-percent critical value for 
+a chi-squared with 1159 d.f. is
+
+```{R}
+
+
+df.residual(Dorsa.output)
+qchisq(0.95, df.residual(Dorsa.output))
+
+deviance(Dorsa.output)
+
+
+pr <- residuals(Dorsa.output,"pearson")
+
+sum(pr^2)
+
+```
+
+and the deviance and Pearson's chi-squared are both high.
+
+
+## Poisson model (the robust or sandwich estimator of the standard errors)
+
+As over-dispersion is present in this data set, we re-compute the Wald tests using sandwich 
+standard errors.
+
+```{R}
+
 
 library(sandwich)
 library(lmtest)
 
 coeftest(Dorsa.output, vcov = sandwich)
 
+coef(Dorsa.output, vcov = sandwich)
 
-#Cameron and Trivedi (2009) recommended using robust standard errors for the parameter 
-#estimates to control for mild violation of the distribution assumption that the variance 
-#equals the mean. 
 
-#We obtain the robust standard errors and calculated the p-values accordingly. Together 
-#with the p-values, we can also calculate the 95% confidence interval using the parameter 
-#estimates and their robust standard errors.
+```
+
+
+Cameron and Trivedi (2009) recommended using robust standard errors for the parameter estimates to control for mild violation of the distribution assumption that the variance 
+equals the mean. 
+
+We obtain the robust standard errors and calculated the p-values accordingly. Together with the p-values, we can also calculate the 95% confidence interval using the parameter estimates and their robust standard errors.
+
+
+```{R}
+
 
 cov.Dorsa.output <- vcovHC(Dorsa.output, type="HC0")
 std.err <- sqrt(diag(cov.Dorsa.output))
-r.est <- cbind(Estimate= coef(Dorsa.output), "Robust SE" = std.err,
+
+  cbind(Estimate= coef(Dorsa.output), "Robust SE" = std.err, 
+        "z value" = coef(Dorsa.output)/std.err, 
 "Pr(>|z|)" = 2 * pnorm(abs(coef(Dorsa.output)/std.err), lower.tail=FALSE),
 LL = coef(Dorsa.output) - 1.96 * std.err,
 UL = coef(Dorsa.output) + 1.96 * std.err)
 
-r.est
-
-#Tempmean, Agro_ecologyNGS, Agro_ecologySGS and SeasonDry are still significant but the standard
-#errors seem to be more appropriate.
-
-#Rainfall and RHmean are not significant
 
 ```
 
+Tempmean, Agro_ecologyNGS, Agro_ecologySGS and SeasonDry are still significant but the standard errors seem to be more appropriate. Rainfall and RHmean are not significant
+
+
 ## Quasi-Poisson Model
 
+
+Another way of dealing with over-dispersion (and excess zeros) is to use the mean regression function and the variance function from the Poisson GLM but to leave the dispersion parameter unrestricted.
+
+Thus, dispersion parameter is not assumed to be fixed at 1 but is estimated from the data. This strategy leads to the same coefficient estimates as the standard Poisson model but inference is adjusted for over-dispersion.
+
+
+We now assume that the variance is proportional rather than equal to the mean, and estimate the scale parameter φ dividing Pearson's chi-squared by its d.f.:
+
+```{r}
+phi <- sum(pr^2)/df.residual(Dorsa.output)
+
+round(c(phi,sqrt(phi)),4)
+```
+
+This means that we should adjust the standard errors multiplying by 55.115, the square root of 3037.659
+
+R can do this calculation for us if we use the quasipoisson family
+
+
 ```{R}
-#Another way of dealing with over-dispersion (and excess zeros) is to use the mean regression 
-#function and the variance function from the Poisson GLM but to leave the dispersion 
-#parameter unrestricted.
-#Thus, dispersion parameter is not assumed to be fixed at 1 but is estimated from the data. 
-#This strategy leads to the same coefficient estimates as the standard Poisson model but 
-#inference is adjusted for over-dispersion.
+
 
 Dorsa.output1 <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt, family = quasipoisson)
 summary(Dorsa.output1)
 
-#The model leads to an estimated dispersion parameter of 3039.838 which is clearly larger than 1
-#confirming that over-dispersion is present in the data.
-
 
 ```
 
+The model leads to an estimated dispersion parameter of 3037.686 which is clearly larger than 1
+confirming that over-dispersion is present in the data.
+
+The estimates are exactly the same as before, but the standard errors are larger by 55.115. We can verify this fact easily. First we write a useful function to extract standard errors and then use it on our fits:
+
+```{r}
+se <- function(model) sqrt(diag(vcov(model)))
+
+round(cbind("p" = coef(Dorsa.output), "q" =coef(Dorsa.output1),
+   "se.p" = se(Dorsa.output), "se.q" = se(Dorsa.output1),
+    "ratio" = se(Dorsa.output1)/se(Dorsa.output)), 4)
+```
+
+
 ## Negative binomial Model
 
-```{R}
+If Theta is not known but to be estimated from the data, the negative binomial model is not a
+special case of the general GLM—however, an ML fit can easily be computed re-using GLM methodology by iterating estimation of Beta given Theta and vice versa. This leads to ML estimates for both Beta and Theta which can be computed.
 
-#If Theta is not known but to be estimated from the data, the negative binomial model is not a
-#special case of the general GLM—however, an ML fit can easily be computed re-using GLM
-#methodology by iterating estimation of Beta given Theta and vice versa. This leads to ML estimates
-#for both Beta and Theta which can be computed
+We now fit a negative binomial model with the same predictors. To do this we need the glm.nb() function in the MASS package.
+
+
+```{R}
 
 Dorsa.output2 <-glm.nb(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt)
 summary(Dorsa.output2)
 
-#over-dispersion can be confirmed by comparison of the log-likelihoods of the Poisson and
-#negative binomial model
+```
+
+R's theta is the precision of the multiplicative random effect, and corresponds to 1/σ2 in the notes.
+
+```{r}
+1/Dorsa.output2$theta
+
+```
+
+The estimate corresponds to an estimated variance of 1.65 and is highly significant.
 
 
+
+```{r}
+-2*(logLik(Dorsa.output)-logLik(Dorsa.output2))
+
+2*(logLik(Dorsa.output2)-logLik(Dorsa.output))
+
+```
+
+To test the significance of this parameter you may think of computing twice the difference in log-likelihoods between this model and the Poisson model, 2419988, and treating it as a chi-squared with one d.f.
+
+
+```{r}
+
+pchisq(-2*(logLik(Dorsa.output)-logLik(Dorsa.output2)), 1, lower.tail = FALSE)
+
+pchisq(2 * (logLik(Dorsa.output2) - logLik(Dorsa.output)), df = 1, lower.tail = FALSE)
+
+```
+
+
+For testing hypotheses about the regression coefficients we can use either Wald tests or likelihood ratio tests, which are possible because we have made full distributional assumptions.
+
+over-dispersion can be confirmed by comparison of the log-likelihoods of the Poisson and negative binomial model
+
+Negative binomial models assume the conditional means are not equal to the conditional variances. 
+This inequality is captured by estimating a dispersion parameter (not shown in the output) that is 
+held constant in a Poisson model. Thus, the Poisson model is actually nested in the negative binomial model. We can then use a likelihood ratio test to compare these two and test this model assumption.
+
+
+```{R}
 logLik(Dorsa.output)
 logLik(Dorsa.output2)
 
 #LR test
 lrtest(Dorsa.output, Dorsa.output2)
 
+
 ```
 
-## Hurdle Negative Binomial Model
+The p value is significant. This strongly suggests the negative binomial model, estimating the dispersion parameter, is more appropriate than the Poisson model.
+
+
+We can assess the goodness of fit of the negative binomial model using the deviance
 
 ```{R}
-#The exploratory analysis conveyed the impression that there might be more zero observations
-#than explained by the basic count data distributions, hence a negative binomial hurdle model
-#is fitted
-
-# "y ~ ." is the same as "y ~ . | ."
-
-library(pscl)
-
-Dorsa.output3 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season , data = spacioTemp_dt,  dist = "negbin")
-summary(Dorsa.output3)
-
-#The increase in the log-likelihood from -8954.9715 to -8921 conveys that the model has 
-#improved by including the hurdle component
 
 
-Dorsa.output3h <-hurdle(formula = B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
-                        , data = spacioTemp_dt,  dist = "negbin")
+df.residual(Dorsa.output2)
+qchisq(0.95, df.residual(Dorsa.output2))
 
-#comparing to the full model in a Wald test
+deviance(Dorsa.output2)
 
-waldtest(Dorsa.output3, Dorsa.output3h)
 
-#or an LR test
-lrtest(Dorsa.output3, Dorsa.output3h)
+pr2 <- residuals(Dorsa.output2,"pearson")
 
-#By omitting Rainfall, Agro_ecology and Season variables, the fit
-#changes significantly.
+sum(pr2^2)
+
+```
+
+The negative binomial model fits better than the Poisson, but still has a deviance (1430.006) above the five percent critical value of 1239.313.
+
+We conclude that the negative binomial model provides a better description of the data than the over-dispersed Poisson model.
+
+
+## Zero-inflated Poisson Model
+
+A frequent occurrence with count data is an excess of zeroes compared to what's expected under a Poisson model. This is actually a problem with our data:
+
+```{r}
+
+count(spacioTemp_dt$B_dorsa == 0)
+sum(spacioTemp_dt$B_dorsa == 0)
+table(spacioTemp_dt$B_dorsa == 0)
+table(spacioTemp_dt$B_dorsa > 0)
+mean(spacioTemp_dt$B_dorsa == 0)
+mean(spacioTemp_dt$B_dorsa != 0)
+
+
+round(sum(dpois(0, fitted(Dorsa.output))),0)
+round(sum(dpois(0, exp(predict(Dorsa.output)))),0)
+
+round(mean(dpois(0, fitted(Dorsa.output))),4)
+round(mean(dpois(0, exp(predict(Dorsa.output)))),4)
 
 
 ```
+
+We see that 2.57% (n=30) of the sites in the sample had no abundance of Bactrocera dorsalis in the crops. Poisson model predicts that 0% of sites would have no abundance of Bactrocera dorsalis. Clearly the model underestimates the probability of zero counts.
+
+One way to model this type of situation is to assume that the data come from a mixture of two populations, one where the counts is always zero, and another where the count has a Poisson distribution with mean μ. In this model zero counts can come from either population, while positive counts come only from the second one.
+
+The distribution of the outcome can then be modeled in terms of two parameters, π the probability of 'always zero', and μ, the mean number for those not in the 'always zero' group. A natural way to introduce covariates is to model the logit of the probability π of always zero and the log of the mean μ for those not in the always zero class.
+
+This type of model can be fit in R using the zeroinfl() function in the pscl package. The model formula can be specified as usual if the same variables are to be included in both equations. Otherwise one can provide two sets of predictors separated by a vertical bar.
+
+```{r}
+library(pscl)
+
+Dorsa.output3 <- zeroinfl(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season, data = spacioTemp_dt, method="BFGS")
+
+#“Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+summary(Dorsa.output3)
+
+```
+
+To verify that the model solves the problem of excess zeroes we predict π and μ, and calculate the combined probability of no no abundance of Bactrocera dorsalis. There are options in the predict() function called "zero" and "count" to obtain these. There's also an option "prob" to compute the predicted density, but this is overkill as we only want the probability of zero.
+
+```{r}
+
+round(sum(predict(Dorsa.output3,type="prob")[,1]),0)
+
+round(mean(predict(Dorsa.output3,type="prob")[,1]), 4)
+
+```
+
+So the model solves the problem of excess zeroes, predicting that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+We can assess the goodness of fit of the Zero-inflated Poisson Model using the deviance
+
+```{R}
+
+
+df.residual(Dorsa.output3)
+qchisq(0.95, df.residual(Dorsa.output3))
+
+deviance(Dorsa.output3)
+
+
+pr3 <- residuals(Dorsa.output3,"pearson")
+
+sum(pr3^2)
+
+```
+
+There's also a zero-inflated negative binomial model, which uses a negative binomial for the count in the 'not always zero' class. This model can be fit using zeroinfl() with the dist="negbin" parameter. Alternative links for the inflate equation include the probit, which can be specified using link="probit".
+
 
 ## Zero-inflated Negative Binomial Model
 
+```{r}
+
+round(sum(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),0)
+round(sum(dnbinom(0, mu = exp(predict(Dorsa.output2)), size = Dorsa.output2$theta)),0)
+
+round(mean(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),4)
+round(mean(dnbinom(0, mu = exp(predict(Dorsa.output2)), size = Dorsa.output2$theta)),4)
+
+```
+
+The negative binomial model predicts that 1.78% (n=21) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops to the observed value of 2.57% (n=30). Clearly with this data, the model underestimates the probability of zero counts.
+
+
+Augmenting the negative binomial count model with additional probability weight for zero counts. A simple inflation model (no regressors for zero component) where all zero counts have the same probability of belonging to the zero component can by specified by the formula y ~ x1 + x2 | 1 
+
+inflation with regressors for zero component formula y ~ x1 + x2 | x1 + x2
+
 ```{R}
-#augmenting the negative binomial count model with additional probability weight for 
-#zero counts
-
-#A simple inflation model (no regressors for zero component) where all zero counts have 
-#the same probability of belonging to the zero component can by specified by the 
-#formula y ~ x1 + x2 | 1
-
-#inflation with regressors for zero component formula y ~ x1 + x2 | x1 + x2
-
-table(spacioTemp_dt$B_dorsa > 0)
 
 
 Dorsa.output4 <- zeroinfl(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season , data = spacioTemp_dt,  dist = "negbin", method="L-BFGS-B")
+
+#“Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
 summary(Dorsa.output4)
+
+```
+
+```{r}
+
+round(sum(predict(Dorsa.output4,type="prob")[,1]),0)
+
+round(mean(predict(Dorsa.output4,type="prob")[,1]), 4)
+
+```
+
+So the model over predicts that 3.29% (n=38) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops to the observed value of 2.57% (n=30).
+
+We can assess the goodness of fit of the Zero-inflated Negative Binomial using the deviance
+
+```{R}
+
+
+df.residual(Dorsa.output4)
+qchisq(0.95, df.residual(Dorsa.output4))
+
+deviance(Dorsa.output4)
+
+
+pr4 <- residuals(Dorsa.output4,"pearson")
+
+sum(pr4^2)
+
+```
+
+
+```{R}
 
 Dorsa.output4h <- zeroinfl(formula = B_dorsa ~  Tempmean + RHmean | Tempmean + RHmean ,
                            data = spacioTemp_dt,  dist = "negbin", method="L-BFGS-B")
@@ -460,270 +660,340 @@ waldtest(Dorsa.output4, Dorsa.output4h)
 #or an LR test
 lrtest(Dorsa.output4, Dorsa.output4h)
 
-#By omitting Rainfall, Agro_ecology and Season variables, the fit
-#changes significantly.
+```
 
+By omitting Rainfall, Agro_ecology and Season variables, the fit changes significantly.
+
+
+## Hurdle Poisson Model
+
+An alternative approach to excess of zeroes is to use a two-stage process, with a logit model to distinguish between zero and positive counts and then a zero-truncated Poisson or negative binomial model for the positive counts. These models are often called hurdle models. They can be fitted in R using the separate logit and zero-truncated Poisson or negative binomial models and simply adding the log-likelihoods, or using the hurdle() function in the pscl package.
+
+
+```{r}
+
+Dorsa.output5 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season , data = spacioTemp_dt)
+
+summary(Dorsa.output5)
 
 ```
+
+```{r}
+
+round(sum(predict(Dorsa.output5,type="prob")[,1]),0)
+
+round(mean(predict(Dorsa.output5,type="prob")[,1]), 4)
+
+```
+
+So Hurdle Poisson Model predicts that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+
+We can assess the goodness of fit of the Hurdle Poisson Model using the deviance
+
+```{R}
+
+
+df.residual(Dorsa.output5)
+qchisq(0.95, df.residual(Dorsa.output5))
+
+deviance(Dorsa.output5)
+
+
+pr5 <- residuals(Dorsa.output5,"pearson")
+
+sum(pr5^2)
+
+```
+
+
+## Hurdle Negative Binomial Model
+
+The exploratory analysis conveyed the impression that there might be more zero observations than explained by the basic count data distributions, hence a negative binomial hurdle model is fitted
+"y ~ ." is the same as "y ~ . | ."
+
+```{R}
+
+
+Dorsa.output6 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season , data = spacioTemp_dt,  dist = "negbin")
+summary(Dorsa.output6)
+
+```
+The increase in the log-likelihood from -8954.9715(NB); -8929(ZI-NB) to -8921 conveys that the Hurdle negative binomial model has improved by including the hurdle component.
+
+
+```{r}
+
+round(sum(predict(Dorsa.output6,type="prob")[,1]),0)
+
+round(mean(predict(Dorsa.output6,type="prob")[,1]), 4)
+
+```
+
+So Hurdle negative binomial Model predicts that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+
+We can assess the goodness of fit of the Hurdle negative binomial Model using the deviance
+
+```{R}
+
+
+df.residual(Dorsa.output6)
+qchisq(0.95, df.residual(Dorsa.output6))
+
+deviance(Dorsa.output6)
+
+
+pr6 <- residuals(Dorsa.output6,"pearson")
+
+sum(pr6^2)
+
+```
+
+
+```{R}
+
+Dorsa.output6h <-hurdle(formula = B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
+                        , data = spacioTemp_dt,  dist = "negbin")
+
+#comparing to the full model in a Wald test
+
+waldtest(Dorsa.output6, Dorsa.output6h)
+
+#or an LR test
+lrtest(Dorsa.output6, Dorsa.output6h)
+
+```
+
+By omitting Rainfall, Agro_ecology and Season variables, the fit changes significantly.
+
 
 ## Comparison of the Count Models
 
+Having fitted several count data regression models to the abundance of Bactrocera-dorsalis in the spacioTemp data, it is of interest to understand what these models have in common and what their differences are.
+
+
+### Estimates/Regression coefficients
+
+1st comparison, we inspect the estimated regression coefficients in the count data models
+
 ```{R}
-#Having fitted several count data regression models to the abundance of Bactrocera-dorsalis
-#in the spacioTemp data, it is of interest to understand what these models have in common 
-#and what their differences are.
 
-#1st comparison, we inspect the estimated regression coefficients in the count data models
+Dorsa.outputa <- coeftest(Dorsa.output, vcov = sandwich)
 
+fm <- list("Pois" = Dorsa.output, "Adj-Pois" = Dorsa.outputa,
+            "Quasi-Pois" = Dorsa.output1, "NegBin" = Dorsa.output2,
+            "ZI-Pois" = Dorsa.output3, "ZI-NegBin" = Dorsa.output4,
+           "Hurdle-Pois" = Dorsa.output5, "Hurdle-NegBin" = Dorsa.output6)
 
-fm <- list("Pois" = Dorsa.output, "Quasi-Pois" = Dorsa.output1, "NegBin" = Dorsa.output2,
-           "Hurdle-NegBin" = Dorsa.output3, "ZI-NegBin" = Dorsa.output4)
-sapply(fm, function(x) coef(x)[1:7])
-
-
-#2nd comparison the associated estimated standard errors
-cbind("Pois" = sqrt(diag(vcov(Dorsa.output))), "Adj-Pois" = sqrt(diag(sandwich(Dorsa.output))),
-      sapply(fm[-1], function(x) sqrt(diag(vcov(x)))[1:7]))
+round(sapply(fm, function(x) coef(x)[1:7]), 4)
 
 
-#3rd Comparison
-#The differences of the models become obvious if not only the mean but the full likelihood is
-#considered
+```
+
+### Standard Errors
+
+2nd comparison the associated estimated standard errors
+
+```{R}
+
+
+round(cbind("Pois" = sqrt(diag(vcov(Dorsa.output))), "Adj-Pois" = sqrt(diag(sandwich(Dorsa.output))),
+      sapply(fm[-(1:2)], function(x) sqrt(diag(vcov(x)))[1:7])),4)
+
+```
+
+### Log-Likelihood & AIC
+
+3rd Comparison The differences of the models become obvious if not only the mean but the full likelihood is considered.
+
+```{R}
 
 rbind(logLik = sapply(fm, function(x) round(logLik(x), digits = 0)),
-      Df = sapply(fm, function(x) attr(logLik(x), "df")))
+      Df = sapply(fm, function(x) attr(logLik(x), "df")),
+      aic = sapply(fm, function(x) round(AIC(x), digits = 0)))
 
-#The Poisson model is clearly inferior to all other fits. The quasi-Poisson model and the
-#sandwich-adjusted Poisson model are not associated with a fitted likelihood. 
-#The negative binomial already improves the fit dramatically but can in turn be improved by 
-#the hurdle model. 
-#The over-dispersion in the data is captured better by the negative-binomial-based models than 
-#the plain Poisson model.
+```
+
+The Poisson model is clearly inferior to all other fits. The quasi-Poisson model is not associated with a fitted likelihood and Akaike's Information Criterion (AIC). 
+
+The negative binomial already improves the fit dramatically but can in turn be improved by 
+the zero inflated and hurdle model. 
+
+The over-dispersion in the data is captured better by the negative-binomial-based models than 
+the Poisson models.
 
 
-#4thComparison of how the zero counts are captured by the various models.
-#Therefore, the observed zero counts are compared to the expected number of zero counts for
-#the likelihood-based models
+### df.residual, five-percent critical value of df.residual, deviance & Residuals Pearson's chi-squared
+
+4th comparison
+
+```{r}
+
+rbind(df_residual = sapply(fm[-2], function(x) round(df.residual(x), digits = 0)),
+      criticalvalue = sapply(fm[-2], function(x) round(qchisq(0.95, df.residual(x)), digits = 0)),
+      dev = sapply(fm[-2], function(x) deviance(x)),
+      resid.Pearson = sapply(fm[-2], function(x) round(sum((residuals(x,"pearson"))^2), 0))
+      )
+
+```
 
 
-round(c("Obs" = sum(spacioTemp_dt$B_dorsa < 1),
+### zero counts
+
+5thComparison of how the zero counts are captured by the various models. Therefore, the observed zero counts are compared to the expected number of zero counts for the likelihood-based models.
+
+
+```{R}
+
+round( cbind("Obs" = sum(spacioTemp_dt$B_dorsa < 1),
 "Pois" = sum(dpois(0, fitted(Dorsa.output))),
 "NegBin" = sum(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),
-"Hurdle-NegBin" = sum(predict(Dorsa.output3, type = "prob")[,1]),
-"ZI-NegBin" = sum(predict(Dorsa.output4, type = "prob")[,1])))
+ "ZI-Pois" = sum(predict(Dorsa.output3, type = "prob")[,1]),
+ "ZI-NegBin" = sum(predict(Dorsa.output4, type = "prob")[,1]),
+"Hurdle-Pois" = sum(predict(Dorsa.output5, type = "prob")[,1]),
+"Hurdle-NegBin" = sum(predict(Dorsa.output6, type = "prob")[,1])))
 
-#the Poisson model is again not appropriate whereas the negative-binomial-based
-#models are much better in modeling the zero counts. 
-#By construction, the expected number of zero counts in the hurdle model matches the
-#observed number.
-
-#the hurdle and zero-inflation models lead to the best results (in terms of likelihood)
-#on this data set.
-
-
-#5thComparison 
-#fitted zero components
-
-t(sapply(fm[4:5], function(x) round(x$coefficients$zero, digits = 3)))
-
-#The absolute values are rather different as they pertain to slightly different ways of 
-#modeling zero counts - but the signs of the coefficients match, i.e., are just inversed. 
-#For the hurdle model, the zero hurdle component describes the probability of observing a 
-#positive count whereas, for the ZINB model, the zero-inflation component predicts the 
-#probability of observing a zero count from the point mass component.
-
-#Overall, both models lead to the same qualitative results and very similar model.
-#the hurdle model is slightly preferable because it has the nicer interpretation
 ```
+
+The plain Poisson model is again not appropriate whereas the negative-binomial-based
+models are much better in modeling the zero counts. 
+
+By construction, the expected number of zero counts in the hurdle models and Zero Inflated Poisson model matches the observed number.
+
+
+### Fitted zero components
+
+6thComparison
+
+```{R}
+ 
+
+t(sapply(fm[5:8], function(x) round(x$coefficients$zero, digits = 3)))
+
+```
+
+The absolute values are rather different as they pertain to slightly different ways of modeling zero counts - but the signs of the coefficients match, i.e., are just inversed. 
+
+For the hurdle models, the zero hurdle component describes the probability of observing a positive count whereas, for the Zero Inflated models, the zero-inflation component predicts the 
+probability of observing a zero count from the point mass component.
+
+Overall, both models lead to the same qualitative results and very similar model. the hurdle model is slightly preferable because it has the nicer interpretation.
+
+Comparing hurdle and zero-inflated models, the distinction between zero and one or more is clearer with hurdle models, but the interpretation of the mean is clearer with zero-inflated models.
+
 
 ## Count Model Chosen
 
-### Negative Binomial Model
+### Hurdle Negative Binomial Model
+
+The count data B_dorsa almost assumes a negative binomial distribution as shown in q-q plots above.
+
+The Hurdle negative binomial model is the best model to fit the data.
 
 ```{R}
-#The count data B_dorsa almost assumes a negative binomial distribution as shown in 
-#q-q plots above.
-
-#The negative binomial model is the best model to fit the data. 
+ 
+summary(Dorsa.output6)
 
 
-Dorsa.output22 <-glm.nb(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season, data = spacioTemp_dt)
-summary(Dorsa.output22)
+```
 
-#The coefficient estimates for Rainfall, Tempmean RHmean, Agro_ecology2(FSM), Agro_ecology3(NGS), 
-#Season 2(Rainy) are all significant.
+We can get the confidence intervals for the coefficients by profiling the likelihood function.
 
 
-#Estimated Negative Binomial Regression Model
-#B_dorsa =  Exp(7.0538275 + 0.0028047*(Rainfall) - 0.0725644*(Tempmean) + 0.0090522*(RHmean) + 
-#0.6403894*(Agro_ecology2(FSM)) - 0.5885592*(Agro_ecology3(NGS)) + 2.1573507*(Season2(Rainy)))
+```{R}
 
-#For each one-unit increase in Rainfall, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis increases by 0.0028047 holding the other variables constant.
+(est <- cbind(Estimate = coef(Dorsa.output6), confint(Dorsa.output6)))
 
-#For each one-unit increase in Tempmean, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis decreases by 0.0725644 holding the other variables constant.
-
-#For each one-unit increase in RHmean, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis increases by 0.0090522 holding the other variables constant.
-
-#The indicator variable shown as Agro_ecology2(FSM) is the expected difference in log count between
-#group 2 and the reference group (Agro_ecology1=1). The expected log count for Agro_ecology 
-#level 2(FSM) is 0.64 higher than the expected log count for level 1(SGS) holding the other 
-#variables constant.
-
-#The indicator variable shown as Agro_ecology3(NGS) is the expected difference in log count between
-#group 3 and the reference group (Agro_ecology1=1). The expected log count for Agro_ecology 
-#level 3(NGS) is 0.59 lower than the expected log count for level 1(SGS) holding the other 
-#variables constant.
-
-#The indicator variable shown as Season2(Rainy) is the expected difference in log count between
-#group 2 and the reference group (Season1=1). The expected log count for Season level 2(Rainy) 
-#of is 2.16 higher than the expected log count for level 1(Dry) holding the other 
-#variables constant.
+```
 
 
+We can be interested in looking at incident rate ratios rather than coefficients. To do this, we
+exponentiate our model coefficients. The same applies to the confidence intervals.
 
-#We can get the confidence intervals for the coefficients by profiling the likelihood function.
+```{R}
 
-(est <- cbind(Estimate = coef(Dorsa.output22), confint(Dorsa.output22)))
-
-#We can be interested in looking at incident rate ratios rather than coefficients. To do this, we
-#exponentiate our model coefficients. The same applies to the confidence intervals.
 
 exp(est)
 
-#For every unit increase in Rainfall, the incident rate for the abundance of 
-#Bactrocera dorsalis increases by factor of 1.003 holding the other variables constant.
-
-#For every unit increase in Tempmean, the incident rate for the abundance of 
-#Bactrocera dorsalis decreases by factor of 0.93 holding the other variables constant.
-
-#For every unit increase in RHmean, the incident rate for the abundance of 
-#Bactrocera dorsalis increases by factor of 1.009 holding the other variables constant.
-
-# The incident rate for Agro_ecology level 2(FSM) is 1.897 times the incident rate for the 
-#reference group Agro_ecology level 1(SGS) while holding all other variables in the model constant.
-
-#The incident rate for Agro_ecology level 3(NGS) is 0.555 times the incident rate for the
-#reference group Agro_ecology level 1(SGS) while holding all other variables in the model constant.
-
-#The incident rate for Season level 2(Rainy) is 8.648 times the incident rate for the 
-#reference group Season level 1(Dry) while holding all other variables in the model constant.
-
 
 ```
 
-### Overall significance for Agro_ecology and Season
 
-```{R}
-
-#The reason it is important to fit separate models, is that unless we do, the overdispersion 
-#parameter is held constant.
-
-
-Dorsa.output22A <- update(Dorsa.output22, . ~ . - Agro_ecology)
-anova(Dorsa.output22, Dorsa.output22A)
-
-waldtest(Dorsa.output22, Dorsa.output22A)
-lrtest(Dorsa.output22, Dorsa.output22A)
-
-#The two degree-of-freedom chi-square test indicates that Agro_ecology is a statistically 
-#significant predictor of B_dorsa.
-
-
-Dorsa.output22S <- update(Dorsa.output22, . ~ . - Season)
-anova(Dorsa.output22, Dorsa.output22S)
-
-waldtest(Dorsa.output22, Dorsa.output22S)
-lrtest(Dorsa.output22, Dorsa.output22S)
-
-#The one degree-of-freedom chi-square test indicates that Season is a statistically 
-#significant predictor of B_dorsa.
-
-```
-
-### Checking Model Assumption
-
-```{R}
-#Negative binomial models assume the conditional means are not equal to the conditional variances. 
-#This inequality is captured by estimating a dispersion parameter (not shown in the output) that is 
-#held constant in a Poisson model. Thus, the Poisson model is actually nested in the negative binomial 
-#model. We can then use a likelihood ratio test to compare these two and test this model assumption.
-
-
-Dorsa.output0 <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season, data = spacioTemp_dt, family = poisson)
-pchisq(2 * (logLik(Dorsa.output22) - logLik(Dorsa.output0)), df = 1, lower.tail = FALSE)
-
-#the associated chi-squared value estimated from 2*(logLik(m1) – logLik(m3)) is 2420871 with one 
-#degree of freedom. This strongly suggests the negative binomial model, estimating the dispersion 
-#parameter, is more appropriate than the Poisson model.
-
-#or an LR test
-lrtest(Dorsa.output22, Dorsa.output0)
-
-```
-
-### Prediction of Negative Binomial Model
+### Prediction of Hurdle Negative Binomial model & Negative Binomial Model
 
 ```{R}
 #Observed value in data is 7758
 
-lapply(df, levels)
 
 #The Negative Binomial model
 newdata <- data.frame(Agro_ecology = "2" , Rainfall =0, Tempmean=26.2, RHmean=81.8, Season = "2" )
 
 
-NB <- predict(Dorsa.output22, newdata, type = "response")
+NB <- predict(Dorsa.output2, newdata, type = "response")
 NB
 
 
-spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, type = "response"),0)
+spacioTemp_dt$PredictB_dorsaNB <- round(predict(Dorsa.output2, spacioTemp_dt, type = "response"),0)
 
+#The Hurdle Negative Binomial model
+
+HNB <- predict(Dorsa.output6, newdata, type = "response")
+HNB
+
+spacioTemp_dt$PredictB_dorsaHNB <- round(predict(Dorsa.output6, spacioTemp_dt, type = "response"),0)
 
 ```
 
 
 ## Mapping the Abundance of B_Dorsa
-```{r , fig.width=9, fig.height=6}
+
+```{r}
 
 #library(devtools)
 #install_github("ropensci/rnaturalearthhires")
 
-spacioTemp_dtnew <- spacioTemp_dt
-spacioTemp_dtnew$Site <- gsub("Alafiarou1", "Alafiarou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Alafiarou2", "Alafiarou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Tchourou1", "Tchourou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Tchourou2", "Tchourou", spacioTemp_dtnew$Site)
-
-spacioTemp_dtnew$Agro_ecology <- factor(spacioTemp_dtnew$Agro_ecology, levels = c("1","2","3"), 
-                               labels = c("SGS","FSM","NGS"))
-
-spacioTemp_dtnew$Season <- factor(spacioTemp_dtnew$Season, levels = c("1","2"), 
-                               labels = c("Dry","Rainy"))
+spacioTemp_dtnew <- spacioTemp_dt%>%
+mutate(Site = gsub("Alafiarou1", "Alafiarou", Site))%>%
+mutate(Site = gsub("Alafiarou2", "Alafiarou", Site))%>%
+mutate(Site = gsub("Tchourou1", "Tchourou", Site))%>%
+mutate(Site = gsub("Tchourou2", "Tchourou", Site))%>%
+mutate(Agro_ecology = factor(Agro_ecology, levels = c("1","2","3"), 
+                               labels = c("SGS","FSM","NGS")))%>%
+mutate(Season = factor(Season, levels = c("1","2"), 
+                               labels = c("Dry","Rainy")))
 
 
-spacioTemp_dt1 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'Season', 'latitude' , 'longitude')]
-spacioTemp_dt1$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt1,FUN=sum)
-spacioTemp_dt1 <- spacioTemp_dt1[!duplicated(spacioTemp_dt1),]
+spacioTemp_dt1 <- spacioTemp_dtnew%>%
+  dplyr:: select(Agro_ecology, Site, Season, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Agro_ecology, Site, Season, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
 
-spacioTemp_dt2 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'latitude' , 'longitude')]
-spacioTemp_dt2$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt2,FUN=sum)
-spacioTemp_dt2 <- spacioTemp_dt2[!duplicated(spacioTemp_dt2),]
+spacioTemp_dt2 <- spacioTemp_dtnew%>%
+  dplyr:: select(Agro_ecology, Site, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Agro_ecology, Site, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
 
-spacioTemp_dt3 <- spacioTemp_dtnew[,c('Site', 'latitude' , 'longitude')]
-spacioTemp_dt3$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt3,FUN=sum)
-spacioTemp_dt3 <- spacioTemp_dt3[!duplicated(spacioTemp_dt3),]
+spacioTemp_dt3 <- spacioTemp_dtnew%>%
+  dplyr:: select(Site, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Site, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
-spacioTemp_dt4 <- spacioTemp_dtnew[,c('Site', 'Season', 'latitude' , 'longitude')]
-spacioTemp_dt4$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt4,FUN=sum)
-spacioTemp_dt4 <- spacioTemp_dt4[!duplicated(spacioTemp_dt4),]
+spacioTemp_dt4 <- spacioTemp_dtnew%>%
+  dplyr:: select( Site, Season, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Site, Season, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
+```
+
+
+```{r}
 
 library(rnaturalearth)
 library(rnaturalearthdata)
@@ -754,22 +1024,31 @@ geom_sf_text(aes(label = name), size = 2, color = "blue")+
 benin <- ne_states(country = "Benin", returnclass = "sf") 
 class(benin)
 
+```
+
+
+```{r}
+
 ggplot(data = benin) +
 geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
 scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
+
+
 
 ggplot(data = benin) +
 geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, size=TotalB_dorsa), colour="red")+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 
@@ -778,10 +1057,15 @@ geom_sf()+
 ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 
+```
+
+
+```{r}
 
 ggplot(data = benin) +
 geom_sf()+
@@ -789,7 +1073,8 @@ ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
   facet_wrap(~Agro_ecology) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+ 
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+ 
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
@@ -800,7 +1085,8 @@ ggtitle("Season Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt4, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Season))+ 
   facet_wrap(~Season) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt4, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
@@ -811,7 +1097,8 @@ ggtitle("Agro Ecology/Season Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt1, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+ 
   facet_grid(Season~Agro_ecology) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(angle = 90, size = 7))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(angle = 90, size = 7))+
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt1, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)

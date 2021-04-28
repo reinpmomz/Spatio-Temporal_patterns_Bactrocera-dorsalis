@@ -1,7 +1,7 @@
 ---
 title: "Spatio-Temporal_patterns_Bactrocera-dorsalis"
 author: "Reinp"
-date: "2020-05-05"
+date: "2021-04-28"
 output:
   html_document: 
     keep_md: yes
@@ -38,28 +38,21 @@ library(ggplot2)
 library(tidyverse)
 
 # Reading our dataset
-setwd('E:/Documents/Reinp/GitHub Respositories/Spatio-Temporal_patterns_Bactrocera-dorsalis')
+setwd('F:/Documents/Reinp/GitHub Respositories/Spatio-Temporal_patterns_Bactrocera-dorsalis')
 
-spacioTemp_dt<-read.table('Male_lures.csv', header=TRUE,sep=",")
-View(spacioTemp_dt)
-attach(spacioTemp_dt)
+spacioTemp_dt_raw <- read_csv('Male_lures.csv')
+View(spacioTemp_dt_raw)
 ```
 
 
 ```r
 #Add tempeaturemean, humididy mean and Season columns
-#apply() function
-spacioTemp_dt$Tempmean <- apply(spacioTemp_dt[,c('TempMaxi',
-                          'TempMini')], 1, function(x) round(mean(x), 1))
-spacioTemp_dt$RHmean <- apply(spacioTemp_dt[,c('RHMaxi', 'RHMini')], 1,
-                              function(x) round(mean(x), 1))
 
-spacioTemp_dt$Season <- spacioTemp_dt$Month == "May" | spacioTemp_dt$Month == "June" | 
-  spacioTemp_dt$Month == "July" |  spacioTemp_dt$Month == "August" |  
-  spacioTemp_dt$Month == "September"
-
-spacioTemp_dt$Season <- factor(spacioTemp_dt$Season, levels = c("TRUE","FALSE"), 
-                               labels = c("Rainy","Dry"))                          
+spacioTemp_dt <- spacioTemp_dt_raw%>%
+ mutate(Tempmean = round((TempMaxi + TempMini)/2,1))%>%
+ mutate(RHmean = round((RHMaxi + RHMini)/2,1))%>%
+ mutate(Season = if_else(Month == "May" | Month == "June" | Month == "July" | 
+                          Month == "August" |  Month == "September", "Rainy","Dry")) 
 ```
 
 
@@ -71,20 +64,17 @@ head(spacioTemp_dt)
 ```
 
 ```
-##   Agro_ecology        Site     Month Year TempMaxi TempMini RHMaxi RHMini
-## 1          SGS Akofodjoule   October 2008     33.0     22.7   94.0   56.5
-## 2          SGS Akofodjoule   October 2008     33.0     22.7   94.0   56.5
-## 3          SGS Akofodjoule September 2005     30.6     22.3   97.0   67.0
-## 4          FSM       Ketou      July 2008     29.8     22.6   96.5   67.1
-## 5          FSM       Ketou      July 2008     29.8     22.6   96.5   67.1
-## 6          FSM        Lalo      July 2008     29.8     22.6   96.5   67.1
-##   Rainfall Attractant Trap B_dorsa latitude longitude Tempmean RHmean Season
-## 1    121.8         ME    1     130 7.750000  2.382899     27.9   75.2    Dry
-## 2    121.8         ME    2      80 7.750000  2.382899     27.9   75.2    Dry
-## 3    136.5         ME    1     497 7.750000  2.382899     26.5   82.0  Rainy
-## 4      0.0         ME    1    7758 7.363320  2.599780     26.2   81.8  Rainy
-## 5      0.0         ME    2    5867 7.363320  2.599780     26.2   81.8  Rainy
-## 6      0.0         ME    1    1136 6.930065  1.878530     26.2   81.8  Rainy
+## # A tibble: 6 x 17
+##   Agro_ecology Site  Month  Year TempMaxi TempMini RHMaxi RHMini Rainfall
+##   <chr>        <chr> <chr> <dbl>    <dbl>    <dbl>  <dbl>  <dbl>    <dbl>
+## 1 SGS          Akof~ Octo~  2008     33       22.7   94     56.5     122.
+## 2 SGS          Akof~ Octo~  2008     33       22.7   94     56.5     122.
+## 3 SGS          Akof~ Sept~  2005     30.6     22.3   97     67       136.
+## 4 FSM          Ketou July   2008     29.8     22.6   96.5   67.1       0 
+## 5 FSM          Ketou July   2008     29.8     22.6   96.5   67.1       0 
+## 6 FSM          Lalo  July   2008     29.8     22.6   96.5   67.1       0 
+## # ... with 8 more variables: Attractant <chr>, Trap <dbl>, B_dorsa <dbl>,
+## #   latitude <dbl>, longitude <dbl>, Tempmean <dbl>, RHmean <dbl>, Season <chr>
 ```
 
 ```r
@@ -92,27 +82,17 @@ tail(spacioTemp_dt)
 ```
 
 ```
-##      Agro_ecology       Site    Month Year TempMaxi TempMini RHMaxi RHMini
-## 1161          NGS Natitingou   August 2006     29.7     22.1   29.7   22.1
-## 1162          NGS Natitingou   August 2006     29.7     22.1   29.7   22.1
-## 1163          FSM      Ketou November 2008     34.4     24.1   25.7   47.4
-## 1164          FSM      Ketou November 2008     34.4     24.1   25.7   47.4
-## 1165          FSM       Lalo November 2008     34.4     24.1   25.7   47.4
-## 1166          FSM       Lalo November 2008     34.4     24.1   25.7   47.4
-##      Rainfall Attractant Trap B_dorsa  latitude longitude Tempmean RHmean
-## 1161    253.0         ME    1    2973 10.304160   1.37962     25.9   25.9
-## 1162    253.0         ME    2    2787 10.304160   1.37962     25.9   25.9
-## 1163      0.0         ME    1     176  7.363320   2.59978     29.2   36.5
-## 1164      0.0         ME    2     174  7.363320   2.59978     29.2   36.5
-## 1165      7.5         ME    1     159  6.930065   1.87853     29.2   36.5
-## 1166      7.5         ME    2      90  6.930065   1.87853     29.2   36.5
-##      Season
-## 1161  Rainy
-## 1162  Rainy
-## 1163    Dry
-## 1164    Dry
-## 1165    Dry
-## 1166    Dry
+## # A tibble: 6 x 17
+##   Agro_ecology Site  Month  Year TempMaxi TempMini RHMaxi RHMini Rainfall
+##   <chr>        <chr> <chr> <dbl>    <dbl>    <dbl>  <dbl>  <dbl>    <dbl>
+## 1 NGS          Nati~ Augu~  2006     29.7     22.1   29.7   22.1    253  
+## 2 NGS          Nati~ Augu~  2006     29.7     22.1   29.7   22.1    253  
+## 3 FSM          Ketou Nove~  2008     34.4     24.1   25.7   47.4      0  
+## 4 FSM          Ketou Nove~  2008     34.4     24.1   25.7   47.4      0  
+## 5 FSM          Lalo  Nove~  2008     34.4     24.1   25.7   47.4      7.5
+## 6 FSM          Lalo  Nove~  2008     34.4     24.1   25.7   47.4      7.5
+## # ... with 8 more variables: Attractant <chr>, Trap <dbl>, B_dorsa <dbl>,
+## #   latitude <dbl>, longitude <dbl>, Tempmean <dbl>, RHmean <dbl>, Season <chr>
 ```
 
 ```r
@@ -150,24 +130,41 @@ str(spacioTemp_dt)
 ```
 
 ```
-## 'data.frame':	1166 obs. of  17 variables:
-##  $ Agro_ecology: Factor w/ 3 levels "FSM","NGS","SGS": 3 3 3 1 1 1 1 2 2 2 ...
-##  $ Site        : Factor w/ 14 levels "Akofodjoule",..: 1 1 1 6 6 7 7 9 9 9 ...
-##  $ Month       : Factor w/ 12 levels "April","August",..: 11 11 12 6 6 6 6 2 2 2 ...
-##  $ Year        : int  2008 2008 2005 2008 2008 2008 2008 2008 2008 2008 ...
-##  $ TempMaxi    : num  33 33 30.6 29.8 29.8 29.8 29.8 29.4 29.4 29.4 ...
-##  $ TempMini    : num  22.7 22.7 22.3 22.6 22.6 22.6 22.6 21.3 21.3 21.3 ...
-##  $ RHMaxi      : num  94 94 97 96.5 96.5 96.5 96.5 96.1 96.1 96.1 ...
-##  $ RHMini      : num  56.5 56.5 67 67.1 67.1 67.1 67.1 70.8 70.8 70.8 ...
-##  $ Rainfall    : num  122 122 136 0 0 ...
-##  $ Attractant  : Factor w/ 1 level "ME": 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Trap        : int  1 2 1 1 2 1 2 1 2 3 ...
-##  $ B_dorsa     : int  130 80 497 7758 5867 1136 1623 9587 5175 6520 ...
-##  $ latitude    : num  7.75 7.75 7.75 7.36 7.36 ...
-##  $ longitude   : num  2.38 2.38 2.38 2.6 2.6 ...
-##  $ Tempmean    : num  27.9 27.9 26.5 26.2 26.2 26.2 26.2 25.4 25.4 25.4 ...
-##  $ RHmean      : num  75.2 75.2 82 81.8 81.8 81.8 81.8 83.4 83.4 83.4 ...
-##  $ Season      : Factor w/ 2 levels "Rainy","Dry": 2 2 1 1 1 1 1 1 1 1 ...
+## tibble [1,166 x 17] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ Agro_ecology: chr [1:1166] "SGS" "SGS" "SGS" "FSM" ...
+##  $ Site        : chr [1:1166] "Akofodjoule" "Akofodjoule" "Akofodjoule" "Ketou" ...
+##  $ Month       : chr [1:1166] "October" "October" "September" "July" ...
+##  $ Year        : num [1:1166] 2008 2008 2005 2008 2008 ...
+##  $ TempMaxi    : num [1:1166] 33 33 30.6 29.8 29.8 29.8 29.8 29.4 29.4 29.4 ...
+##  $ TempMini    : num [1:1166] 22.7 22.7 22.3 22.6 22.6 22.6 22.6 21.3 21.3 21.3 ...
+##  $ RHMaxi      : num [1:1166] 94 94 97 96.5 96.5 96.5 96.5 96.1 96.1 96.1 ...
+##  $ RHMini      : num [1:1166] 56.5 56.5 67 67.1 67.1 67.1 67.1 70.8 70.8 70.8 ...
+##  $ Rainfall    : num [1:1166] 122 122 136 0 0 ...
+##  $ Attractant  : chr [1:1166] "ME" "ME" "ME" "ME" ...
+##  $ Trap        : num [1:1166] 1 2 1 1 2 1 2 1 2 3 ...
+##  $ B_dorsa     : num [1:1166] 130 80 497 7758 5867 ...
+##  $ latitude    : num [1:1166] 7.75 7.75 7.75 7.36 7.36 ...
+##  $ longitude   : num [1:1166] 2.38 2.38 2.38 2.6 2.6 ...
+##  $ Tempmean    : num [1:1166] 27.9 27.9 26.5 26.2 26.2 26.2 26.2 25.4 25.4 25.4 ...
+##  $ RHmean      : num [1:1166] 75.2 75.2 82 81.8 81.8 81.8 81.8 83.4 83.4 83.4 ...
+##  $ Season      : chr [1:1166] "Dry" "Dry" "Rainy" "Rainy" ...
+##  - attr(*, "spec")=
+##   .. cols(
+##   ..   Agro_ecology = col_character(),
+##   ..   Site = col_character(),
+##   ..   Month = col_character(),
+##   ..   Year = col_double(),
+##   ..   TempMaxi = col_double(),
+##   ..   TempMini = col_double(),
+##   ..   RHMaxi = col_double(),
+##   ..   RHMini = col_double(),
+##   ..   Rainfall = col_double(),
+##   ..   Attractant = col_character(),
+##   ..   Trap = col_double(),
+##   ..   B_dorsa = col_double(),
+##   ..   latitude = col_double(),
+##   ..   longitude = col_double()
+##   .. )
 ```
 
 ```r
@@ -175,7 +172,7 @@ class(spacioTemp_dt)
 ```
 
 ```
-## [1] "data.frame"
+## [1] "spec_tbl_df" "tbl_df"      "tbl"         "data.frame"
 ```
 
 ```r
@@ -342,8 +339,8 @@ table(spacioTemp_dt$Season)
 
 ```
 ## 
-## Rainy   Dry 
-##   546   620
+##   Dry Rainy 
+##   620   546
 ```
 
 ```r
@@ -406,7 +403,7 @@ summary(spacioTemp_dt$Tempmean)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   24.90   26.50   27.80   28.04   29.40   31.90
+##   24.90   26.50   27.80   28.04   29.40   32.00
 ```
 
 ```r
@@ -415,7 +412,7 @@ summary(spacioTemp_dt$RHmean)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   22.10   53.00   73.00   66.13   79.50   83.60
+##   22.00   53.00   73.00   66.13   79.40   83.60
 ```
 
 ```r
@@ -488,8 +485,8 @@ favstats(~Tempmean, data=spacioTemp_dt)
 ```
 
 ```
-##   min   Q1 median   Q3  max     mean       sd    n missing
-##  24.9 26.5   27.8 29.4 31.9 28.03559 1.823846 1166       0
+##   min   Q1 median   Q3 max     mean      sd    n missing
+##  24.9 26.5   27.8 29.4  32 28.03628 1.82443 1166       0
 ```
 
 ```r
@@ -497,8 +494,8 @@ favstats(~RHmean, data=spacioTemp_dt)
 ```
 
 ```
-##   min Q1 median   Q3  max     mean       sd    n missing
-##  22.1 53     73 79.5 83.6 66.13362 16.03771 1166       0
+##  min Q1 median   Q3  max     mean       sd    n missing
+##   22 53     73 79.4 83.6 66.13216 16.03956 1166       0
 ```
 
 ```r
@@ -580,8 +577,8 @@ favstats(TempMaxi~Season, data=spacioTemp_dt)
 
 ```
 ##   Season  min   Q1 median   Q3  max     mean       sd   n missing
-## 1  Rainy 28.7 29.9   30.9 32.5 37.2 31.21172 1.732435 546       0
-## 2    Dry 30.2 34.4   36.0 37.3 39.8 35.79790 2.155688 620       0
+## 1    Dry 30.2 34.4   36.0 37.3 39.8 35.79790 2.155688 620       0
+## 2  Rainy 28.7 29.9   30.9 32.5 37.2 31.21172 1.732435 546       0
 ```
 
 ```r
@@ -658,8 +655,8 @@ favstats(TempMini~Season, data=spacioTemp_dt)
 
 ```
 ##   Season  min   Q1 median   Q3  max     mean        sd   n missing
-## 1  Rainy 19.0 21.7   22.3 22.9 24.6 22.35440 0.8224984 546       0
-## 2    Dry 16.1 21.1   23.0 24.1 25.7 22.48484 1.9718526 620       0
+## 1    Dry 16.1 21.1   23.0 24.1 25.7 22.48484 1.9718526 620       0
+## 2  Rainy 19.0 21.7   22.3 22.9 24.6 22.35440 0.8224984 546       0
 ```
 
 ```r
@@ -736,8 +733,8 @@ favstats(RHMaxi~Season, data=spacioTemp_dt)
 
 ```
 ##   Season  min Q1 median   Q3 max     mean        sd   n missing
-## 1  Rainy 29.7 92   94.0 95.4  97 92.44322  9.151085 546       0
-## 2    Dry 25.7 66   82.1 92.0  96 76.77484 17.511478 620       0
+## 1    Dry 25.7 66   82.1 92.0  96 76.77484 17.511478 620       0
+## 2  Rainy 29.7 92   94.0 95.4  97 92.44322  9.151085 546       0
 ```
 
 ```r
@@ -814,8 +811,8 @@ favstats(RHMini~Season, data=spacioTemp_dt)
 
 ```
 ##   Season  min Q1 median    Q3  max     mean        sd   n missing
-## 1  Rainy 18.0 58     64 66.85 72.2 61.71520  8.890424 546       0
-## 2    Dry 12.9 23     35 47.00 65.1 36.21871 14.679426 620       0
+## 1    Dry 12.9 23     35 47.00 65.1 36.21871 14.679426 620       0
+## 2  Rainy 18.0 58     64 66.85 72.2 61.71520  8.890424 546       0
 ```
 
 ```r
@@ -892,8 +889,8 @@ favstats(Rainfall~Season, data=spacioTemp_dt)
 
 ```
 ##   Season min      Q1 median     Q3   max      mean       sd   n missing
-## 1  Rainy   0 111.225  168.7 231.15 349.7 166.79414 89.14523 546       0
-## 2    Dry   0   0.000    9.2  80.90 236.3  41.74548 55.16398 620       0
+## 1    Dry   0   0.000    9.2  80.90 236.3  41.74548 55.16398 620       0
+## 2  Rainy   0 111.225  168.7 231.15 349.7 166.79414 89.14523 546       0
 ```
 
 ```r
@@ -970,8 +967,8 @@ favstats(B_dorsa~Season, data=spacioTemp_dt)
 
 ```
 ##   Season min  Q1 median      Q3   max      mean        sd   n missing
-## 1  Rainy   6 979 2370.5 5147.50 31769 3904.8278 4338.8243 546       0
-## 2    Dry   0  23   80.0  202.25  7553  300.5113  821.6993 620       0
+## 1    Dry   0  23   80.0  202.25  7553  300.5113  821.6993 620       0
+## 2  Rainy   6 979 2370.5 5147.50 31769 3904.8278 4338.8243 546       0
 ```
 
 ```r
@@ -980,9 +977,9 @@ favstats(Tempmean~Agro_ecology, data=spacioTemp_dt)
 
 ```
 ##   Agro_ecology  min   Q1 median     Q3  max     mean       sd   n missing
-## 1          FSM 25.8 26.6   28.4 29.500 31.4 28.22256 1.551522 195       0
-## 2          NGS 24.9 26.4   27.6 28.975 31.9 27.88548 1.854073 482       0
-## 3          SGS 25.2 26.5   27.8 29.700 31.9 28.10900 1.885275 489       0
+## 1          FSM 25.8 26.6   28.4 29.500 31.4 28.22923 1.551327 195       0
+## 2          NGS 24.9 26.4   27.6 28.975 32.0 27.88361 1.854051 482       0
+## 3          SGS 25.2 26.5   27.8 29.700 32.0 28.10982 1.886260 489       0
 ```
 
 ```r
@@ -991,18 +988,18 @@ favstats(Tempmean~Site, data=spacioTemp_dt)
 
 ```
 ##            Site  min     Q1 median   Q3  max     mean       sd   n missing
-## 1   Akofodjoule 25.2 26.900   28.4 30.2 31.9 28.57054 1.783711 129       0
+## 1   Akofodjoule 25.2 27.000   28.4 30.2 31.9 28.57132 1.782519 129       0
 ## 2    Alafiarou1 25.3 26.000   27.4 28.7 31.4 27.65600 1.910141  50       0
 ## 3    Alafiarou2 25.3 26.000   27.4 28.7 31.4 27.65600 1.910141  50       0
-## 4       Bassila 25.5 26.900   28.2 29.7 31.9 28.31793 1.863117 145       0
+## 4       Bassila 25.5 26.900   28.2 29.7 32.0 28.32000 1.867098 145       0
 ## 5     Iloulofin 26.4 26.600   28.1 29.0 30.1 28.04000 1.458865  15       0
-## 6         Ketou 25.8 26.675   28.4 29.6 31.4 28.30408 1.613725  98       0
-## 7          Lalo 25.8 26.900   28.4 29.5 30.8 28.15854 1.503572  82       0
+## 6         Ketou 25.8 26.675   28.4 29.6 31.4 28.30918 1.611946  98       0
+## 7          Lalo 25.8 26.900   28.4 29.5 30.8 28.16829 1.505453  82       0
 ## 8  Mondjigangan 26.3 26.600   28.4 28.9 30.6 28.16000 1.633489  15       0
-## 9    Natitingou 24.9 26.300   27.2 29.0 31.6 27.69034 1.813389 145       0
-## 10        Ndali 25.3 26.500   27.6 29.7 31.9 28.14777 1.918820 157       0
-## 11      Papatia 25.0 26.400   27.3 28.6 31.6 27.62317 1.684299  82       0
-## 12      Parakou 25.3 26.400   27.6 28.9 31.8 27.97347 1.907854  98       0
+## 9    Natitingou 24.9 26.300   27.2 29.0 31.6 27.68621 1.811408 145       0
+## 10        Ndali 25.3 26.500   27.6 29.7 32.0 28.14904 1.921258 157       0
+## 11      Papatia 25.0 26.400   27.3 28.6 31.6 27.61707 1.680521  82       0
+## 12      Parakou 25.3 26.400   27.6 28.9 31.8 27.97347 1.907746  98       0
 ## 13    Tchourou1 25.3 26.000   27.4 28.7 31.4 27.65600 1.910141  50       0
 ## 14    Tchourou2 25.3 26.000   27.4 28.7 31.4 27.65600 1.910141  50       0
 ```
@@ -1013,15 +1010,15 @@ favstats(Tempmean~Month, data=spacioTemp_dt)
 
 ```
 ##        Month  min    Q1 median   Q3  max     mean        sd   n missing
-## 1      April 26.1 29.40  30.00 30.2 31.7 29.84510 0.9791517 102       0
-## 2     August 25.0 25.40  25.70 25.9 29.2 25.80086 0.6886023 116       0
-## 3   December 24.9 27.60  28.00 29.1 31.9 28.48706 1.2793961  85       0
-## 4   February 28.4 30.10  30.70 30.8 31.9 30.48764 0.8216973  89       0
+## 1      April 26.0 29.40  30.00 30.2 31.7 29.85294 0.9768312 102       0
+## 2     August 25.0 25.40  25.70 26.0 29.2 25.80948 0.6904288 116       0
+## 3   December 24.9 27.60  28.00 29.1 32.0 28.48824 1.2826138  85       0
+## 4   February 28.4 30.10  30.70 30.8 32.0 30.48876 0.8237164  89       0
 ## 5    January 25.5 27.90  28.70 29.5 31.7 28.41882 1.3743825  85       0
-## 6       July 25.5 25.60  26.10 26.4 27.6 26.06121 0.5438624 116       0
-## 7       June 26.2 26.90  27.20 27.4 28.4 27.19913 0.4717447 115       0
-## 8      March 26.9 30.35  31.40 31.6 31.9 30.79231 1.2130064  91       0
-## 9        May 25.6 28.10  28.40 28.6 30.3 28.34522 0.7078809 115       0
+## 6       July 25.5 25.60  26.00 26.4 27.6 26.05603 0.5439451 116       0
+## 7       June 26.2 26.90  27.20 27.4 28.4 27.20000 0.4692286 115       0
+## 8      March 26.9 30.35  31.40 31.6 32.0 30.79560 1.2161791  91       0
+## 9        May 25.6 28.00  28.40 28.6 30.3 28.33652 0.7014184 115       0
 ## 10  November 26.6 27.40  28.35 28.9 31.2 28.23571 0.9844138  84       0
 ## 11   October 26.5 27.05  27.40 27.6 30.0 27.34405 0.6342344  84       0
 ## 12 September 25.6 26.00  26.40 26.6 29.1 26.43452 0.6331208  84       0
@@ -1035,11 +1032,11 @@ favstats(Tempmean~Year, data=spacioTemp_dt)
 ##   Year  min     Q1 median     Q3  max     mean       sd   n missing
 ## 1 2004 29.6 29.600   29.6 29.600 29.6 29.60000       NA   1       0
 ## 2 2005 25.0 26.275   27.6 29.050 31.4 27.67059 1.606715  34       0
-## 3 2006 24.9 26.900   28.0 30.000 31.7 28.34321 1.999496  81       0
-## 4 2007 25.0 26.400   27.4 28.600 31.9 27.69514 1.575329 185       0
-## 5 2008 25.4 26.600   27.8 29.400 31.8 28.04912 1.782254 228       0
-## 6 2009 25.5 26.400   27.4 28.825 31.9 27.76478 1.718654 372       0
-## 7 2010 25.3 27.200   28.7 30.500 31.9 28.58868 1.996442 265       0
+## 3 2006 24.9 26.900   28.0 30.000 31.7 28.34198 1.999679  81       0
+## 4 2007 25.0 26.400   27.4 28.600 32.0 27.69676 1.581617 185       0
+## 5 2008 25.4 26.600   27.8 29.400 31.8 28.05088 1.780028 228       0
+## 6 2009 25.5 26.400   27.4 28.825 32.0 27.76478 1.719014 372       0
+## 7 2010 25.3 27.200   28.7 30.500 31.9 28.58943 1.996579 265       0
 ```
 
 ```r
@@ -1048,8 +1045,8 @@ favstats(Tempmean~Season, data=spacioTemp_dt)
 
 ```
 ##   Season  min   Q1 median   Q3  max     mean       sd   n missing
-## 1  Rainy 25.0 25.9   26.5 27.6 30.3 26.78407 1.123078 546       0
-## 2    Dry 24.9 27.6   29.0 30.6 31.9 29.13774 1.597411 620       0
+## 1    Dry 24.9 27.6   29.0 30.6 32.0 29.13984 1.599175 620       0
+## 2  Rainy 25.0 25.9   26.5 27.6 30.3 26.78315 1.118883 546       0
 ```
 
 ```r
@@ -1058,9 +1055,9 @@ favstats(RHmean~Agro_ecology, data=spacioTemp_dt)
 
 ```
 ##   Agro_ecology  min    Q1 median   Q3  max     mean       sd   n missing
-## 1          FSM 36.5 69.15   78.0 80.5 83.5 73.44205 10.22157 195       0
-## 2          NGS 22.1 49.50   70.0 79.0 83.6 62.61266 18.25550 482       0
-## 3          SGS 22.2 55.50   72.5 79.0 83.5 66.68978 14.49535 489       0
+## 1          FSM 36.5 69.15   78.0 80.5 83.5 73.44205 10.22160 195       0
+## 2          NGS 22.0 49.50   70.0 79.0 83.6 62.60954 18.25905 482       0
+## 3          SGS 22.2 55.50   72.5 79.0 83.5 66.68937 14.49510 489       0
 ```
 
 ```r
@@ -1072,15 +1069,15 @@ favstats(RHmean~Site, data=spacioTemp_dt)
 ## 1   Akofodjoule 40.0 63.0   72.5 78.500 83.5 69.98837 10.043325 129       0
 ## 2    Alafiarou1 38.5 55.5   75.5 79.000 83.0 67.35000 14.541724  50       0
 ## 3    Alafiarou2 38.5 55.5   75.5 79.000 83.0 67.35000 14.541724  50       0
-## 4       Bassila 22.2 51.0   68.0 76.500 81.5 62.02621 17.153616 145       0
+## 4       Bassila 22.2 51.0   68.0 76.500 81.5 62.02483 17.152529 145       0
 ## 5     Iloulofin 49.0 77.0   78.0 80.500 81.5 73.20000 12.637529  15       0
-## 6         Ketou 36.5 68.8   77.5 80.500 83.5 73.26122 10.208261  98       0
-## 7          Lalo 36.5 69.7   78.0 80.500 83.5 73.70244  9.885430  82       0
+## 6         Ketou 36.5 68.8   77.5 80.500 83.5 73.26122 10.208281  98       0
+## 7          Lalo 36.5 69.7   78.0 80.500 83.5 73.70244  9.885455  82       0
 ## 8  Mondjigangan 68.0 74.5   74.5 76.000 80.0 74.60000  4.000893  15       0
-## 9    Natitingou 22.1 40.4   61.1 78.000 83.6 58.71931 21.076696 145       0
-## 10        Ndali 22.2 51.0   70.0 78.500 83.0 63.16624 16.895393 157       0
-## 11      Papatia 22.1 50.5   74.5 80.375 83.6 66.09146 16.711674  82       0
-## 12      Parakou 22.2 52.0   70.9 78.875 83.0 64.57551 16.233598  98       0
+## 9    Natitingou 22.0 40.4   61.1 78.000 83.6 58.71517 21.083351 145       0
+## 10        Ndali 22.2 51.0   70.0 78.500 83.0 63.16433 16.893995 157       0
+## 11      Papatia 22.0 50.5   74.5 80.375 83.6 66.08659 16.723797  82       0
+## 12      Parakou 22.2 52.0   70.9 78.875 83.0 64.57347 16.232217  98       0
 ## 13    Tchourou1 38.5 55.5   75.5 79.000 83.0 67.35000 14.541724  50       0
 ## 14    Tchourou2 38.5 55.5   75.5 79.000 83.0 67.35000 14.541724  50       0
 ```
@@ -1094,15 +1091,15 @@ favstats(RHmean~Month, data=spacioTemp_dt)
 ## 1      April 31.5 63.0  65.50 72.10 80.1 65.86569  8.218989 102       0
 ## 2     August 25.9 80.0  81.50 83.00 83.5 79.65086  9.071623 116       0
 ## 3   December 22.2 43.0  45.10 58.50 71.0 49.37412 11.461583  85       0
-## 4   February 22.1 46.0  49.50 58.60 73.0 49.36629 13.154259  89       0
-## 5    January 22.2 38.5  39.50 53.00 68.0 43.39647 12.306391  85       0
+## 4   February 22.0 46.0  49.50 58.60 73.0 49.36067 13.166052  89       0
+## 5    January 22.2 38.5  39.50 53.00 68.0 43.39059 12.313810  85       0
 ## 6       July 26.6 78.5  80.50 81.00 83.6 78.74397  7.262127 116       0
-## 7       June 27.8 75.5  77.50 78.25 80.5 76.40000  6.754557 115       0
-## 8      March 31.5 50.5  52.00 63.00 76.5 56.56044 10.007718  91       0
+## 7       June 27.8 75.5  77.50 78.25 80.5 76.39826  6.756933 115       0
+## 8      March 31.5 50.5  52.00 63.00 76.5 56.55934 10.005620  91       0
 ## 9        May 28.1 71.7  74.50 77.00 81.5 73.59304  6.871116 115       0
 ## 10  November 26.6 51.3  55.50 64.00 79.5 56.43333 12.246222  84       0
 ## 11   October 22.2 75.0  76.25 80.00 80.0 73.12976 12.814748  84       0
-## 12 September 25.6 79.5  79.50 81.00 82.5 76.91786 11.773343  84       0
+## 12 September 25.6 79.5  79.50 81.00 82.5 76.91310 11.772305  84       0
 ```
 
 ```r
@@ -1115,8 +1112,8 @@ favstats(RHmean~Year, data=spacioTemp_dt)
 ## 2 2005 35.5 66.500  75.75 79.5 83.0 69.83824 13.75859  34       0
 ## 3 2006 24.9 31.500  55.00 76.0 83.5 54.68272 20.97266  81       0
 ## 4 2007 26.5 64.000  75.50 79.5 83.5 68.38649 16.02082 185       0
-## 5 2008 22.1 51.400  69.70 79.0 83.6 63.50351 18.38831 228       0
-## 6 2009 22.2 59.875  75.00 79.5 83.0 68.98952 12.76279 372       0
+## 5 2008 22.0 51.400  69.70 79.0 83.6 63.49649 18.39581 228       0
+## 6 2009 22.2 59.875  75.00 79.5 83.0 68.98925 12.76266 372       0
 ## 7 2010 27.1 52.000  71.50 78.0 83.0 65.84189 14.71157 265       0
 ```
 
@@ -1125,9 +1122,9 @@ favstats(RHmean~Season, data=spacioTemp_dt)
 ```
 
 ```
-##   Season  min   Q1 median     Q3  max     mean        sd   n missing
-## 1  Rainy 25.6 75.5  79.00 80.725 83.6 77.07711  8.584003 546       0
-## 2    Dry 22.1 46.0  56.25 68.000 80.1 56.49629 14.850663 620       0
+##   Season  min   Q1 median     Q3  max     mean       sd   n missing
+## 1    Dry 22.0 46.0  56.25 68.000 80.1 56.49452 14.85388 620       0
+## 2  Rainy 25.6 75.5  79.00 80.725 83.6 77.07601  8.58422 546       0
 ```
 
 ```r
@@ -1136,12 +1133,12 @@ favstats(B_dorsa~Season+Agro_ecology, data=spacioTemp_dt)
 
 ```
 ##   Season.Agro_ecology min      Q1 median      Q3   max      mean        sd   n
-## 1           Rainy.FSM 704 1629.00   3198 7521.00 24471 5080.4330 4601.2830  97
-## 2             Dry.FSM  21   87.75    175  551.75  7387  778.2551 1621.4253  98
-## 3           Rainy.NGS   6  700.75   1816 3912.25 21848 2988.0189 3421.8495 212
-## 4             Dry.NGS   0    7.00     54  148.00  3603  158.9148  326.4460 270
-## 5           Rainy.SGS  70  860.00   2669 5643.00 31769 4243.7722 4791.0834 237
-## 6             Dry.SGS   0   29.75     72  184.25  7553  266.4325  650.4289 252
+## 1             Dry.FSM  21   87.75    175  551.75  7387  778.2551 1621.4253  98
+## 2           Rainy.FSM 704 1629.00   3198 7521.00 24471 5080.4330 4601.2830  97
+## 3             Dry.NGS   0    7.00     54  148.00  3603  158.9148  326.4460 270
+## 4           Rainy.NGS   6  700.75   1816 3912.25 21848 2988.0189 3421.8495 212
+## 5             Dry.SGS   0   29.75     72  184.25  7553  266.4325  650.4289 252
+## 6           Rainy.SGS  70  860.00   2669 5643.00 31769 4243.7722 4791.0834 237
 ##   missing
 ## 1       0
 ## 2       0
@@ -1287,20 +1284,25 @@ ks.test(spacioTemp_dt$B_dorsa, "pweibull", paraw$estimate[1], paraw$estimate[2])
 ## alternative hypothesis: two-sided
 ```
 
-## fitting the Poison model: Quantitative Quantitative
+
+## fitting the Poison model
 
 
 ```r
-spacioTemp_dt$Agro_ecology <- factor(spacioTemp_dt$Agro_ecology, levels = c("SGS","FSM","NGS"), 
-                               labels = c("1","2","3"))
+spacioTemp_dt <- spacioTemp_dt%>%
+ mutate(Agro_ecology = factor(Agro_ecology, levels = c("SGS","FSM","NGS"), 
+                               labels = c("1","2","3")))%>%
+mutate(Season = factor(Season, levels = c("Dry","Rainy"), 
+                               labels = c("1","2")))
+```
 
-spacioTemp_dt$Season <- factor(spacioTemp_dt$Season, levels = c("Dry","Rainy"), 
-                               labels = c("1","2"))
 
-#Model to be used in the modelling of seasonal abundance of Bactrocera dorsalis in Benin
-#is the Poisson regression model since the abundance of 
-#Bactrocera dorsalis is discrete count data. 
+Model to be used in the modelling of seasonal abundance of Bactrocera dorsalis in Benin
+is the Poisson regression model since the abundance of Bactrocera dorsalis is discrete count data. 
 
+
+
+```r
 Dorsa.output <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt, family = poisson)
 summary(Dorsa.output)
@@ -1313,37 +1315,79 @@ summary(Dorsa.output)
 ##     Season, family = poisson, data = spacioTemp_dt)
 ## 
 ## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -90.493  -26.872  -15.649    2.335  269.562  
+##    Min      1Q  Median      3Q     Max  
+## -90.50  -26.99  -15.62    2.29  269.63  
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    1.718e+00  2.183e-02   78.69   <2e-16 ***
-## Rainfall       7.866e-04  8.536e-06   92.15   <2e-16 ***
-## Tempmean       1.214e-01  6.362e-04  190.78   <2e-16 ***
-## RHmean         8.459e-03  9.918e-05   85.28   <2e-16 ***
-## Agro_ecology2  2.186e-01  1.702e-03  128.42   <2e-16 ***
-## Agro_ecology3 -3.741e-01  1.613e-03 -231.90   <2e-16 ***
-## Season2        2.590e+00  3.022e-03  857.27   <2e-16 ***
+## (Intercept)    1.654e+00  2.192e-02   75.47   <2e-16 ***
+## Rainfall       7.899e-04  8.536e-06   92.54   <2e-16 ***
+## Tempmean       1.233e-01  6.386e-04  193.03   <2e-16 ***
+## RHmean         8.581e-03  9.939e-05   86.34   <2e-16 ***
+## Agro_ecology2  2.174e-01  1.703e-03  127.70   <2e-16 ***
+## Agro_ecology3 -3.729e-01  1.613e-03 -231.18   <2e-16 ***
+## Season2        2.593e+00  3.024e-03  857.59   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## (Dispersion parameter for poisson family taken to be 1)
 ## 
 ##     Null deviance: 4771651  on 1165  degrees of freedom
-## Residual deviance: 2429931  on 1159  degrees of freedom
-## AIC: 2438795
+## Residual deviance: 2429048  on 1159  degrees of freedom
+## AIC: 2437912
 ## 
 ## Number of Fisher Scoring iterations: 6
 ```
+All coefficient estimates are highly significant. The Wald test results might be too optimistic due to a misspecification of the likelihood.
+
+We see that the model obviously doesn't fit the data. The five-percent critical value for 
+a chi-squared with 1159 d.f. is
+
 
 ```r
-#All coefficient estimates are highly significant. 
-#the Wald test results might be too optimistic due to a misspecification of the likelihood. 
+df.residual(Dorsa.output)
+```
 
-#As over-dispersion is present in this data set, we re-compute the Wald tests using sandwich 
-#standard errors
+```
+## [1] 1159
+```
 
+```r
+qchisq(0.95, df.residual(Dorsa.output))
+```
+
+```
+## [1] 1239.313
+```
+
+```r
+deviance(Dorsa.output)
+```
+
+```
+## [1] 2429048
+```
+
+```r
+pr <- residuals(Dorsa.output,"pearson")
+
+sum(pr^2)
+```
+
+```
+## [1] 3520646
+```
+
+and the deviance and Pearson's chi-squared are both high.
+
+
+## Poisson model (the robust or sandwich estimator of the standard errors)
+
+As over-dispersion is present in this data set, we re-compute the Wald tests using sandwich 
+standard errors.
+
+
+```r
 library(sandwich)
 library(lmtest)
 
@@ -1354,74 +1398,98 @@ coeftest(Dorsa.output, vcov = sandwich)
 ## 
 ## z test of coefficients:
 ## 
-##                 Estimate Std. Error z value  Pr(>|z|)    
-## (Intercept)    1.7177993  1.2880554  1.3336 0.1823226    
-## Rainfall       0.0007866  0.0005495  1.4315 0.1522947    
-## Tempmean       0.1213783  0.0356976  3.4002 0.0006734 ***
-## RHmean         0.0084585  0.0066979  1.2629 0.2066423    
-## Agro_ecology2  0.2185991  0.1094380  1.9975 0.0457741 *  
-## Agro_ecology3 -0.3740537  0.1094044 -3.4190 0.0006285 ***
-## Season2        2.5904745  0.1612375 16.0662 < 2.2e-16 ***
+##                  Estimate  Std. Error z value  Pr(>|z|)    
+## (Intercept)    1.65429914  1.29610089  1.2764 0.2018262    
+## Rainfall       0.00078992  0.00054950  1.4375 0.1505706    
+## Tempmean       0.12326785  0.03587155  3.4364 0.0005896 ***
+## RHmean         0.00858109  0.00673473  1.2742 0.2026081    
+## Agro_ecology2  0.21743516  0.10941651  1.9872 0.0468975 *  
+## Agro_ecology3 -0.37294806  0.10937354 -3.4099 0.0006500 ***
+## Season2        2.59312140  0.16117342 16.0890 < 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 ```r
-#Cameron and Trivedi (2009) recommended using robust standard errors for the parameter 
-#estimates to control for mild violation of the distribution assumption that the variance 
-#equals the mean. 
+coef(Dorsa.output, vcov = sandwich)
+```
 
-#We obtain the robust standard errors and calculated the p-values accordingly. Together 
-#with the p-values, we can also calculate the 95% confidence interval using the parameter 
-#estimates and their robust standard errors.
+```
+##   (Intercept)      Rainfall      Tempmean        RHmean Agro_ecology2 
+##  1.6542991400  0.0007899193  0.1232678546  0.0085810934  0.2174351574 
+## Agro_ecology3       Season2 
+## -0.3729480641  2.5931213970
+```
 
+
+Cameron and Trivedi (2009) recommended using robust standard errors for the parameter estimates to control for mild violation of the distribution assumption that the variance 
+equals the mean. 
+
+We obtain the robust standard errors and calculated the p-values accordingly. Together with the p-values, we can also calculate the 95% confidence interval using the parameter estimates and their robust standard errors.
+
+
+
+```r
 cov.Dorsa.output <- vcovHC(Dorsa.output, type="HC0")
 std.err <- sqrt(diag(cov.Dorsa.output))
-r.est <- cbind(Estimate= coef(Dorsa.output), "Robust SE" = std.err,
+
+  cbind(Estimate= coef(Dorsa.output), "Robust SE" = std.err, 
+        "z value" = coef(Dorsa.output)/std.err, 
 "Pr(>|z|)" = 2 * pnorm(abs(coef(Dorsa.output)/std.err), lower.tail=FALSE),
 LL = coef(Dorsa.output) - 1.96 * std.err,
 UL = coef(Dorsa.output) + 1.96 * std.err)
-
-r.est
 ```
 
 ```
-##                    Estimate    Robust SE     Pr(>|z|)            LL
-## (Intercept)    1.7177992601 1.2880554291 1.823226e-01 -0.8067893809
-## Rainfall       0.0007865995 0.0005495036 1.522947e-01 -0.0002904275
-## Tempmean       0.1213783040 0.0356975664 6.734045e-04  0.0514110739
-## RHmean         0.0084585138 0.0066979443 2.066423e-01 -0.0046694570
-## Agro_ecology2  0.2185991105 0.1094379855 4.577413e-02  0.0041006590
-## Agro_ecology3 -0.3740536891 0.1094044112 6.285171e-04 -0.5884863351
-## Season2        2.5904744602 0.1612374671 4.402142e-58  2.2744490246
+##                    Estimate    Robust SE   z value     Pr(>|z|)            LL
+## (Intercept)    1.6542991400 1.2961008875  1.276366 2.018262e-01 -0.8860585995
+## Rainfall       0.0007899193 0.0005495019  1.437519 1.505706e-01 -0.0002871043
+## Tempmean       0.1232678546 0.0358715517  3.436368 5.895694e-04  0.0529596134
+## RHmean         0.0085810934 0.0067347276  1.274156 2.026081e-01 -0.0046189728
+## Agro_ecology2  0.2174351574 0.1094165128  1.987224 4.689754e-02  0.0029787923
+## Agro_ecology3 -0.3729480641 0.1093735428 -3.409856 6.499712e-04 -0.5873202079
+## Season2        2.5931213970 0.1611734193 16.089014 3.046506e-58  2.2772214953
 ##                         UL
-## (Intercept)    4.242387901
-## Rainfall       0.001863626
-## Tempmean       0.191345534
-## RHmean         0.021586485
-## Agro_ecology2  0.433097562
-## Agro_ecology3 -0.159621043
-## Season2        2.906499896
+## (Intercept)    4.194656879
+## Rainfall       0.001866943
+## Tempmean       0.193576096
+## RHmean         0.021781159
+## Agro_ecology2  0.431891523
+## Agro_ecology3 -0.158575920
+## Season2        2.909021299
 ```
 
-```r
-#Tempmean, Agro_ecologyNGS, Agro_ecologySGS and SeasonDry are still significant but the standard
-#errors seem to be more appropriate.
+Tempmean, Agro_ecologyNGS, Agro_ecologySGS and SeasonDry are still significant but the standard errors seem to be more appropriate. Rainfall and RHmean are not significant
 
-#Rainfall and RHmean are not significant
-```
 
 ## Quasi-Poisson Model
 
 
-```r
-#Another way of dealing with over-dispersion (and excess zeros) is to use the mean regression 
-#function and the variance function from the Poisson GLM but to leave the dispersion 
-#parameter unrestricted.
-#Thus, dispersion parameter is not assumed to be fixed at 1 but is estimated from the data. 
-#This strategy leads to the same coefficient estimates as the standard Poisson model but 
-#inference is adjusted for over-dispersion.
+Another way of dealing with over-dispersion (and excess zeros) is to use the mean regression function and the variance function from the Poisson GLM but to leave the dispersion parameter unrestricted.
 
+Thus, dispersion parameter is not assumed to be fixed at 1 but is estimated from the data. This strategy leads to the same coefficient estimates as the standard Poisson model but inference is adjusted for over-dispersion.
+
+
+We now assume that the variance is proportional rather than equal to the mean, and estimate the scale parameter φ dividing Pearson's chi-squared by its d.f.:
+
+
+```r
+phi <- sum(pr^2)/df.residual(Dorsa.output)
+
+round(c(phi,sqrt(phi)),4)
+```
+
+```
+## [1] 3037.659   55.115
+```
+
+This means that we should adjust the standard errors multiplying by 55.115, the square root of 3037.659
+
+R can do this calculation for us if we use the quasipoisson family
+
+
+
+```r
 Dorsa.output1 <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt, family = quasipoisson)
 summary(Dorsa.output1)
@@ -1434,44 +1502,66 @@ summary(Dorsa.output1)
 ##     Season, family = quasipoisson, data = spacioTemp_dt)
 ## 
 ## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -90.493  -26.872  -15.649    2.335  269.562  
+##    Min      1Q  Median      3Q     Max  
+## -90.50  -26.99  -15.62    2.29  269.63  
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)    1.7177993  1.2035579   1.427 0.153772    
-## Rainfall       0.0007866  0.0004707   1.671 0.094933 .  
-## Tempmean       0.1213783  0.0350770   3.460 0.000559 ***
-## RHmean         0.0084585  0.0054684   1.547 0.122184    
-## Agro_ecology2  0.2185991  0.0938506   2.329 0.020018 *  
-## Agro_ecology3 -0.3740537  0.0889327  -4.206  2.8e-05 ***
-## Season2        2.5904745  0.1666044  15.549  < 2e-16 ***
+## (Intercept)    1.6542991  1.2080788   1.369 0.171151    
+## Rainfall       0.0007899  0.0004705   1.679 0.093426 .  
+## Tempmean       0.1232679  0.0351956   3.502 0.000479 ***
+## RHmean         0.0085811  0.0054780   1.566 0.117514    
+## Agro_ecology2  0.2174352  0.0938478   2.317 0.020683 *  
+## Agro_ecology3 -0.3729481  0.0889143  -4.194 2.94e-05 ***
+## Season2        2.5931214  0.1666529  15.560  < 2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## (Dispersion parameter for quasipoisson family taken to be 3039.838)
+## (Dispersion parameter for quasipoisson family taken to be 3037.686)
 ## 
 ##     Null deviance: 4771651  on 1165  degrees of freedom
-## Residual deviance: 2429931  on 1159  degrees of freedom
+## Residual deviance: 2429048  on 1159  degrees of freedom
 ## AIC: NA
 ## 
 ## Number of Fisher Scoring iterations: 6
 ```
 
+The model leads to an estimated dispersion parameter of 3037.686 which is clearly larger than 1
+confirming that over-dispersion is present in the data.
+
+The estimates are exactly the same as before, but the standard errors are larger by 55.115. We can verify this fact easily. First we write a useful function to extract standard errors and then use it on our fits:
+
+
 ```r
-#The model leads to an estimated dispersion parameter of 3039.838 which is clearly larger than 1
-#confirming that over-dispersion is present in the data.
+se <- function(model) sqrt(diag(vcov(model)))
+
+round(cbind("p" = coef(Dorsa.output), "q" =coef(Dorsa.output1),
+   "se.p" = se(Dorsa.output), "se.q" = se(Dorsa.output1),
+    "ratio" = se(Dorsa.output1)/se(Dorsa.output)), 4)
 ```
+
+```
+##                     p       q   se.p   se.q   ratio
+## (Intercept)    1.6543  1.6543 0.0219 1.2081 55.1152
+## Rainfall       0.0008  0.0008 0.0000 0.0005 55.1152
+## Tempmean       0.1233  0.1233 0.0006 0.0352 55.1152
+## RHmean         0.0086  0.0086 0.0001 0.0055 55.1152
+## Agro_ecology2  0.2174  0.2174 0.0017 0.0938 55.1152
+## Agro_ecology3 -0.3729 -0.3729 0.0016 0.0889 55.1152
+## Season2        2.5931  2.5931 0.0030 0.1667 55.1152
+```
+
 
 ## Negative binomial Model
 
+If Theta is not known but to be estimated from the data, the negative binomial model is not a
+special case of the general GLM—however, an ML fit can easily be computed re-using GLM methodology by iterating estimation of Beta given Theta and vice versa. This leads to ML estimates for both Beta and Theta which can be computed.
+
+We now fit a negative binomial model with the same predictors. To do this we need the glm.nb() function in the MASS package.
+
+
 
 ```r
-#If Theta is not known but to be estimated from the data, the negative binomial model is not a
-#special case of the general GLM—however, an ML fit can easily be computed re-using GLM
-#methodology by iterating estimation of Beta given Theta and vice versa. This leads to ML estimates
-#for both Beta and Theta which can be computed
-
 Dorsa.output2 <-glm.nb(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season, data = spacioTemp_dt)
 summary(Dorsa.output2)
@@ -1481,50 +1571,109 @@ summary(Dorsa.output2)
 ## 
 ## Call:
 ## glm.nb(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
-##     Season, data = spacioTemp_dt, init.theta = 0.6069934279, 
+##     Season, data = spacioTemp_dt, init.theta = 0.6069331912, 
 ##     link = log)
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -2.7145  -1.1299  -0.5695   0.0688   5.2142  
+## -2.7140  -1.1294  -0.5689   0.0688   5.2074  
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    7.0538275  0.8674736   8.131 4.24e-16 ***
-## Rainfall       0.0028047  0.0005844   4.799 1.59e-06 ***
-## Tempmean      -0.0725644  0.0280024  -2.591  0.00956 ** 
-## RHmean         0.0090522  0.0035435   2.555  0.01063 *  
-## Agro_ecology2  0.6403894  0.1115165   5.743 9.33e-09 ***
-## Agro_ecology3 -0.5885592  0.0852985  -6.900 5.20e-12 ***
-## Season2        2.1573507  0.1180235  18.279  < 2e-16 ***
+## (Intercept)    7.0238828  0.8680953   8.091 5.91e-16 ***
+## Rainfall       0.0028067  0.0005844   4.803 1.56e-06 ***
+## Tempmean      -0.0715832  0.0280214  -2.555   0.0106 *  
+## RHmean         0.0090754  0.0035430   2.561   0.0104 *  
+## Agro_ecology2  0.6411248  0.1115308   5.748 9.01e-09 ***
+## Agro_ecology3 -0.5878060  0.0853128  -6.890 5.58e-12 ***
+## Season2        2.1583099  0.1180833  18.278  < 2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## (Dispersion parameter for Negative Binomial(0.607) family taken to be 1)
+## (Dispersion parameter for Negative Binomial(0.6069) family taken to be 1)
 ## 
-##     Null deviance: 2592.1  on 1165  degrees of freedom
+##     Null deviance: 2591.9  on 1165  degrees of freedom
 ## Residual deviance: 1430.0  on 1159  degrees of freedom
 ## AIC: 17926
 ## 
 ## Number of Fisher Scoring iterations: 1
 ## 
 ## 
-##               Theta:  0.6070 
+##               Theta:  0.6069 
 ##           Std. Err.:  0.0218 
 ## 
-##  2 x log-likelihood:  -17909.9430
+##  2 x log-likelihood:  -17910.0980
+```
+
+R's theta is the precision of the multiplicative random effect, and corresponds to 1/σ2 in the notes.
+
+
+```r
+1/Dorsa.output2$theta
+```
+
+```
+## [1] 1.647628
+```
+
+The estimate corresponds to an estimated variance of 1.65 and is highly significant.
+
+
+
+
+```r
+-2*(logLik(Dorsa.output)-logLik(Dorsa.output2))
+```
+
+```
+## 'log Lik.' 2419988 (df=7)
 ```
 
 ```r
-#over-dispersion can be confirmed by comparison of the log-likelihoods of the Poisson and
-#negative binomial model
+2*(logLik(Dorsa.output2)-logLik(Dorsa.output))
+```
+
+```
+## 'log Lik.' 2419988 (df=8)
+```
+
+To test the significance of this parameter you may think of computing twice the difference in log-likelihoods between this model and the Poisson model, 2419988, and treating it as a chi-squared with one d.f.
 
 
+
+```r
+pchisq(-2*(logLik(Dorsa.output)-logLik(Dorsa.output2)), 1, lower.tail = FALSE)
+```
+
+```
+## 'log Lik.' 0 (df=7)
+```
+
+```r
+pchisq(2 * (logLik(Dorsa.output2) - logLik(Dorsa.output)), df = 1, lower.tail = FALSE)
+```
+
+```
+## 'log Lik.' 0 (df=8)
+```
+
+
+For testing hypotheses about the regression coefficients we can use either Wald tests or likelihood ratio tests, which are possible because we have made full distributional assumptions.
+
+over-dispersion can be confirmed by comparison of the log-likelihoods of the Poisson and negative binomial model
+
+Negative binomial models assume the conditional means are not equal to the conditional variances. 
+This inequality is captured by estimating a dispersion parameter (not shown in the output) that is 
+held constant in a Poisson model. Thus, the Poisson model is actually nested in the negative binomial model. We can then use a likelihood ratio test to compare these two and test this model assumption.
+
+
+
+```r
 logLik(Dorsa.output)
 ```
 
 ```
-## 'log Lik.' -1219390 (df=7)
+## 'log Lik.' -1218949 (df=7)
 ```
 
 ```r
@@ -1532,7 +1681,7 @@ logLik(Dorsa.output2)
 ```
 
 ```
-## 'log Lik.' -8954.972 (df=8)
+## 'log Lik.' -8955.049 (df=8)
 ```
 
 ```r
@@ -1546,130 +1695,90 @@ lrtest(Dorsa.output, Dorsa.output2)
 ## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
 ## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
 ##   #Df   LogLik Df   Chisq Pr(>Chisq)    
-## 1   7 -1219390                          
-## 2   8    -8955  1 2420871  < 2.2e-16 ***
+## 1   7 -1218949                          
+## 2   8    -8955  1 2419988  < 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-## Hurdle Negative Binomial Model
+The p value is significant. This strongly suggests the negative binomial model, estimating the dispersion parameter, is more appropriate than the Poisson model.
+
+
+We can assess the goodness of fit of the negative binomial model using the deviance
 
 
 ```r
-#The exploratory analysis conveyed the impression that there might be more zero observations
-#than explained by the basic count data distributions, hence a negative binomial hurdle model
-#is fitted
-
-# "y ~ ." is the same as "y ~ . | ."
-
-library(pscl)
-
-Dorsa.output3 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season , data = spacioTemp_dt,  dist = "negbin")
-summary(Dorsa.output3)
+df.residual(Dorsa.output2)
 ```
 
 ```
-## 
-## Call:
-## hurdle(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
-##     Season | Rainfall + Tempmean + RHmean + Agro_ecology + Season, data = spacioTemp_dt, 
-##     dist = "negbin")
-## 
-## Pearson residuals:
-##      Min       1Q   Median       3Q      Max 
-## -0.80426 -0.65690 -0.45030  0.06554 19.69268 
-## 
-## Count model coefficients (truncated negbin with log link):
-##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    6.4741895  0.9484002   6.826 8.71e-12 ***
-## Rainfall       0.0027418  0.0005498   4.987 6.14e-07 ***
-## Tempmean      -0.0498779  0.0311378  -1.602  0.10919    
-## RHmean         0.0076626  0.0029622   2.587  0.00969 ** 
-## Agro_ecology2  0.6424159  0.1090851   5.889 3.88e-09 ***
-## Agro_ecology3 -0.5091837  0.0890375  -5.719 1.07e-08 ***
-## Season2        2.2007175  0.1053937  20.881  < 2e-16 ***
-## Log(theta)    -0.4705474  0.0416685 -11.293  < 2e-16 ***
-## Zero hurdle model coefficients (binomial with logit link):
-##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    1.813e+01  4.042e+00   4.486 7.26e-06 ***
-## Rainfall       6.358e-03  9.784e-03   0.650  0.51577    
-## Tempmean      -5.405e-01  1.376e-01  -3.928 8.57e-05 ***
-## RHmean         6.633e-02  2.020e-02   3.284  0.00102 ** 
-## Agro_ecology2  1.417e+01  3.034e+03   0.005  0.99627    
-## Agro_ecology3 -3.335e+00  1.029e+00  -3.240  0.00120 ** 
-## Season2        1.497e+01  1.698e+03   0.009  0.99297    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-## 
-## Theta: count = 0.6247
-## Number of iterations in BFGS optimization: 15 
-## Log-likelihood: -8921 on 15 Df
+## [1] 1159
 ```
 
 ```r
-#The increase in the log-likelihood from -8954.9715 to -8921 conveys that the model has 
-#improved by including the hurdle component
-
-
-Dorsa.output3h <-hurdle(formula = B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
-                        , data = spacioTemp_dt,  dist = "negbin")
-
-#comparing to the full model in a Wald test
-
-waldtest(Dorsa.output3, Dorsa.output3h)
+qchisq(0.95, df.residual(Dorsa.output2))
 ```
 
 ```
-## Wald test
+## [1] 1239.313
+```
+
+```r
+deviance(Dorsa.output2)
+```
+
+```
+## [1] 1430.006
+```
+
+```r
+pr2 <- residuals(Dorsa.output2,"pearson")
+
+sum(pr2^2)
+```
+
+```
+## [1] 2202.806
+```
+
+The negative binomial model fits better than the Poisson, but still has a deviance (1430.006) above the five percent critical value of 1239.313.
+
+We conclude that the negative binomial model provides a better description of the data than the over-dispersed Poisson model.
+
+
+## Zero-inflated Poisson Model
+
+A frequent occurrence with count data is an excess of zeroes compared to what's expected under a Poisson model. This is actually a problem with our data:
+
+
+```r
+count(spacioTemp_dt$B_dorsa == 0)
+```
+
+```
+## n_TRUE 
+##     30
+```
+
+```r
+sum(spacioTemp_dt$B_dorsa == 0)
+```
+
+```
+## [1] 30
+```
+
+```r
+table(spacioTemp_dt$B_dorsa == 0)
+```
+
+```
 ## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season | 
-##     Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
-##   Res.Df Df  Chisq Pr(>Chisq)    
-## 1   1151                         
-## 2   1159 -8 682.58  < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## FALSE  TRUE 
+##  1136    30
 ```
 
 ```r
-#or an LR test
-lrtest(Dorsa.output3, Dorsa.output3h)
-```
-
-```
-## Likelihood ratio test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season | 
-##     Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
-##   #Df  LogLik Df Chisq Pr(>Chisq)    
-## 1  15 -8921.1                        
-## 2   7 -9184.5 -8 526.7  < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-#By omitting Rainfall, Agro_ecology and Season variables, the fit
-#changes significantly.
-```
-
-## Zero-inflated Negative Binomial Model
-
-
-```r
-#augmenting the negative binomial count model with additional probability weight for 
-#zero counts
-
-#A simple inflation model (no regressors for zero component) where all zero counts have 
-#the same probability of belonging to the zero component can by specified by the 
-#formula y ~ x1 + x2 | 1
-
-#inflation with regressors for zero component formula y ~ x1 + x2 | x1 + x2
-
 table(spacioTemp_dt$B_dorsa > 0)
 ```
 
@@ -1680,9 +1789,218 @@ table(spacioTemp_dt$B_dorsa > 0)
 ```
 
 ```r
+mean(spacioTemp_dt$B_dorsa == 0)
+```
+
+```
+## [1] 0.02572899
+```
+
+```r
+mean(spacioTemp_dt$B_dorsa != 0)
+```
+
+```
+## [1] 0.974271
+```
+
+```r
+round(sum(dpois(0, fitted(Dorsa.output))),0)
+```
+
+```
+## [1] 0
+```
+
+```r
+round(sum(dpois(0, exp(predict(Dorsa.output)))),0)
+```
+
+```
+## [1] 0
+```
+
+```r
+round(mean(dpois(0, fitted(Dorsa.output))),4)
+```
+
+```
+## [1] 0
+```
+
+```r
+round(mean(dpois(0, exp(predict(Dorsa.output)))),4)
+```
+
+```
+## [1] 0
+```
+
+We see that 2.57% (n=30) of the sites in the sample had no abundance of Bactrocera dorsalis in the crops. Poisson model predicts that 0% of sites would have no abundance of Bactrocera dorsalis. Clearly the model underestimates the probability of zero counts.
+
+One way to model this type of situation is to assume that the data come from a mixture of two populations, one where the counts is always zero, and another where the count has a Poisson distribution with mean μ. In this model zero counts can come from either population, while positive counts come only from the second one.
+
+The distribution of the outcome can then be modeled in terms of two parameters, π the probability of 'always zero', and μ, the mean number for those not in the 'always zero' group. A natural way to introduce covariates is to model the logit of the probability π of always zero and the log of the mean μ for those not in the always zero class.
+
+This type of model can be fit in R using the zeroinfl() function in the pscl package. The model formula can be specified as usual if the same variables are to be included in both equations. Otherwise one can provide two sets of predictors separated by a vertical bar.
+
+
+```r
+library(pscl)
+
+Dorsa.output3 <- zeroinfl(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season, data = spacioTemp_dt, method="BFGS")
+
+#“Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+summary(Dorsa.output3)
+```
+
+```
+## 
+## Call:
+## zeroinfl(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
+##     Season | Rainfall + Tempmean + RHmean + Agro_ecology + Season, data = spacioTemp_dt, 
+##     method = "BFGS")
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -65.513 -20.607  -6.368   1.557 423.574 
+## 
+## Count model coefficients (poisson with log link):
+##                 Estimate Std. Error z value Pr(>|z|)
+## (Intercept)    1.7326166         NA      NA       NA
+## Rainfall       0.0007757         NA      NA       NA
+## Tempmean       0.1231369         NA      NA       NA
+## RHmean         0.0078931         NA      NA       NA
+## Agro_ecology2  0.2196480         NA      NA       NA
+## Agro_ecology3 -0.3629122         NA      NA       NA
+## Season2        2.5704457         NA      NA       NA
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                 Estimate Std. Error z value Pr(>|z|)
+## (Intercept)   -18.160359         NA      NA       NA
+## Rainfall       -0.006313         NA      NA       NA
+## Tempmean        0.541499         NA      NA       NA
+## RHmean         -0.066412         NA      NA       NA
+## Agro_ecology2 -14.171004         NA      NA       NA
+## Agro_ecology3   3.337713         NA      NA       NA
+## Season2       -14.963704         NA      NA       NA
+## 
+## Number of iterations in BFGS optimization: 1 
+## Log-likelihood: -1.212e+06 on 14 Df
+```
+
+To verify that the model solves the problem of excess zeroes we predict π and μ, and calculate the combined probability of no no abundance of Bactrocera dorsalis. There are options in the predict() function called "zero" and "count" to obtain these. There's also an option "prob" to compute the predicted density, but this is overkill as we only want the probability of zero.
+
+
+```r
+round(sum(predict(Dorsa.output3,type="prob")[,1]),0)
+```
+
+```
+## [1] 30
+```
+
+```r
+round(mean(predict(Dorsa.output3,type="prob")[,1]), 4)
+```
+
+```
+## [1] 0.0257
+```
+
+So the model solves the problem of excess zeroes, predicting that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+We can assess the goodness of fit of the Zero-inflated Poisson Model using the deviance
+
+
+```r
+df.residual(Dorsa.output3)
+```
+
+```
+## [1] 1152
+```
+
+```r
+qchisq(0.95, df.residual(Dorsa.output3))
+```
+
+```
+## [1] 1232.074
+```
+
+```r
+deviance(Dorsa.output3)
+```
+
+```
+## NULL
+```
+
+```r
+pr3 <- residuals(Dorsa.output3,"pearson")
+
+sum(pr3^2)
+```
+
+```
+## [1] 3288193
+```
+
+There's also a zero-inflated negative binomial model, which uses a negative binomial for the count in the 'not always zero' class. This model can be fit using zeroinfl() with the dist="negbin" parameter. Alternative links for the inflate equation include the probit, which can be specified using link="probit".
+
+
+## Zero-inflated Negative Binomial Model
+
+
+```r
+round(sum(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),0)
+```
+
+```
+## [1] 21
+```
+
+```r
+round(sum(dnbinom(0, mu = exp(predict(Dorsa.output2)), size = Dorsa.output2$theta)),0)
+```
+
+```
+## [1] 21
+```
+
+```r
+round(mean(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),4)
+```
+
+```
+## [1] 0.0178
+```
+
+```r
+round(mean(dnbinom(0, mu = exp(predict(Dorsa.output2)), size = Dorsa.output2$theta)),4)
+```
+
+```
+## [1] 0.0178
+```
+
+The negative binomial model predicts that 1.78% (n=21) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops to the observed value of 2.57% (n=30). Clearly with this data, the model underestimates the probability of zero counts.
+
+
+Augmenting the negative binomial count model with additional probability weight for zero counts. A simple inflation model (no regressors for zero component) where all zero counts have the same probability of belonging to the zero component can by specified by the formula y ~ x1 + x2 | 1 
+
+inflation with regressors for zero component formula y ~ x1 + x2 | x1 + x2
+
+
+```r
 Dorsa.output4 <- zeroinfl(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
                      Season , data = spacioTemp_dt,  dist = "negbin", method="L-BFGS-B")
+
+#“Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
 summary(Dorsa.output4)
 ```
 
@@ -1695,35 +2013,93 @@ summary(Dorsa.output4)
 ## 
 ## Pearson residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.81133 -0.66813 -0.45668  0.06685 20.25926 
+## -0.80973 -0.67207 -0.46246  0.07394 21.86544 
 ## 
 ## Count model coefficients (negbin with log link):
 ##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    6.6696333  0.9237881   7.220 5.20e-13 ***
-## Rainfall       0.0027254  0.0005351   5.093 3.53e-07 ***
-## Tempmean      -0.0561435  0.0303130  -1.852   0.0640 .  
-## RHmean         0.0077202  0.0028971   2.665   0.0077 ** 
-## Agro_ecology2  0.6514245  0.1062682   6.130 8.79e-10 ***
-## Agro_ecology3 -0.5005503  0.0867955  -5.767 8.07e-09 ***
-## Season2        2.1656575  0.1027963  21.067  < 2e-16 ***
-## Log(theta)    -0.4150762  0.0369095 -11.246  < 2e-16 ***
+## (Intercept)    8.0470921  0.9353386   8.603  < 2e-16 ***
+## Rainfall       0.0026138  0.0005407   4.834 1.34e-06 ***
+## Tempmean      -0.0994949  0.0304598  -3.266  0.00109 ** 
+## RHmean         0.0062414  0.0029724   2.100  0.03575 *  
+## Agro_ecology2  0.6413383  0.1062156   6.038 1.56e-09 ***
+## Agro_ecology3 -0.5757769  0.0874547  -6.584 4.59e-11 ***
+## Season2        2.1276110  0.1034439  20.568  < 2e-16 ***
+## Log(theta)    -0.4190009  0.0370603 -11.306  < 2e-16 ***
 ## 
 ## Zero-inflation model coefficients (binomial with logit link):
 ##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)   -1.829e+01  4.838e+00  -3.779 0.000157 ***
-## Rainfall      -6.303e-03  1.386e-02  -0.455 0.649207    
-## Tempmean       5.485e-01  1.653e-01   3.317 0.000909 ***
-## RHmean        -8.615e-02  2.562e-02  -3.363 0.000771 ***
-## Agro_ecology2 -1.417e+01  5.018e+03  -0.003 0.997746    
-## Agro_ecology3  3.838e+00  1.567e+00   2.449 0.014335 *  
-## Season2       -1.497e+01  1.945e+03  -0.008 0.993861    
+## (Intercept)   -1.816e+01  4.842e+00  -3.750 0.000177 ***
+## Rainfall      -7.461e-03  1.463e-02  -0.510 0.610162    
+## Tempmean       5.582e-01  1.688e-01   3.307 0.000942 ***
+## RHmean        -8.488e-02  2.604e-02  -3.260 0.001115 ** 
+## Agro_ecology2 -1.417e+01  3.999e+03  -0.004 0.997173    
+## Agro_ecology3  3.339e+00  1.258e+00   2.654 0.007957 ** 
+## Season2       -1.496e+01  2.118e+03  -0.007 0.994364    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
 ## 
-## Theta = 0.6603 
-## Number of iterations in L-BFGS-B optimization: 901 
-## Log-likelihood: -8928 on 15 Df
+## Theta = 0.6577 
+## Number of iterations in L-BFGS-B optimization: 30 
+## Log-likelihood: -8929 on 15 Df
 ```
+
+
+```r
+round(sum(predict(Dorsa.output4,type="prob")[,1]),0)
+```
+
+```
+## [1] 38
+```
+
+```r
+round(mean(predict(Dorsa.output4,type="prob")[,1]), 4)
+```
+
+```
+## [1] 0.0329
+```
+
+So the model over predicts that 3.29% (n=38) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops to the observed value of 2.57% (n=30).
+
+We can assess the goodness of fit of the Zero-inflated Negative Binomial using the deviance
+
+
+```r
+df.residual(Dorsa.output4)
+```
+
+```
+## [1] 1151
+```
+
+```r
+qchisq(0.95, df.residual(Dorsa.output4))
+```
+
+```
+## [1] 1231.039
+```
+
+```r
+deviance(Dorsa.output4)
+```
+
+```
+## NULL
+```
+
+```r
+pr4 <- residuals(Dorsa.output4,"pearson")
+
+sum(pr4^2)
+```
+
+```
+## [1] 2302.781
+```
+
+
 
 ```r
 Dorsa.output4h <- zeroinfl(formula = B_dorsa ~  Tempmean + RHmean | Tempmean + RHmean ,
@@ -1742,7 +2118,7 @@ waldtest(Dorsa.output4, Dorsa.output4h)
 ## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
 ##   Res.Df Df  Chisq Pr(>Chisq)    
 ## 1   1151                         
-## 2   1159 -8 691.84  < 2.2e-16 ***
+## 2   1159 -8 686.69  < 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
@@ -1758,539 +2134,652 @@ lrtest(Dorsa.output4, Dorsa.output4h)
 ## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season | 
 ##     Rainfall + Tempmean + RHmean + Agro_ecology + Season
 ## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
-##   #Df  LogLik Df  Chisq Pr(>Chisq)    
-## 1  15 -8927.9                         
-## 2   7 -9194.6 -8 533.52  < 2.2e-16 ***
+##   #Df  LogLik Df Chisq Pr(>Chisq)    
+## 1  15 -8929.4                        
+## 2   7 -9199.9 -8   541  < 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-```r
-#By omitting Rainfall, Agro_ecology and Season variables, the fit
-#changes significantly.
-```
-
-## Comparison of the Count Models
+By omitting Rainfall, Agro_ecology and Season variables, the fit changes significantly.
 
 
-```r
-#Having fitted several count data regression models to the abundance of Bactrocera-dorsalis
-#in the spacioTemp data, it is of interest to understand what these models have in common 
-#and what their differences are.
+## Hurdle Poisson Model
 
-#1st comparison, we inspect the estimated regression coefficients in the count data models
+An alternative approach to excess of zeroes is to use a two-stage process, with a logit model to distinguish between zero and positive counts and then a zero-truncated Poisson or negative binomial model for the positive counts. These models are often called hurdle models. They can be fitted in R using the separate logit and zero-truncated Poisson or negative binomial models and simply adding the log-likelihoods, or using the hurdle() function in the pscl package.
 
-
-fm <- list("Pois" = Dorsa.output, "Quasi-Pois" = Dorsa.output1, "NegBin" = Dorsa.output2,
-           "Hurdle-NegBin" = Dorsa.output3, "ZI-NegBin" = Dorsa.output4)
-sapply(fm, function(x) coef(x)[1:7])
-```
-
-```
-##                        Pois    Quasi-Pois       NegBin Hurdle-NegBin
-## (Intercept)    1.7177992601  1.7177992601  7.053827498   6.474189456
-## Rainfall       0.0007865995  0.0007865995  0.002804711   0.002741802
-## Tempmean       0.1213783040  0.1213783040 -0.072564393  -0.049877893
-## RHmean         0.0084585138  0.0084585138  0.009052247   0.007662564
-## Agro_ecology2  0.2185991105  0.2185991105  0.640389357   0.642415918
-## Agro_ecology3 -0.3740536891 -0.3740536891 -0.588559195  -0.509183748
-## Season2        2.5904744602  2.5904744602  2.157350684   2.200717480
-##                  ZI-NegBin
-## (Intercept)    6.669633258
-## Rainfall       0.002725365
-## Tempmean      -0.056143466
-## RHmean         0.007720208
-## Agro_ecology2  0.651424515
-## Agro_ecology3 -0.500550306
-## Season2        2.165657485
-```
-
-```r
-#2nd comparison the associated estimated standard errors
-cbind("Pois" = sqrt(diag(vcov(Dorsa.output))), "Adj-Pois" = sqrt(diag(sandwich(Dorsa.output))),
-      sapply(fm[-1], function(x) sqrt(diag(vcov(x)))[1:7]))
-```
-
-```
-##                       Pois     Adj-Pois   Quasi-Pois       NegBin Hurdle-NegBin
-## (Intercept)   2.182940e-02 1.2880554291 1.2035579241 0.8674736153  0.9484002443
-## Rainfall      8.536392e-06 0.0005495036 0.0004706516 0.0005843761  0.0005498209
-## Tempmean      6.362045e-04 0.0356975664 0.0350769621 0.0280024308  0.0311378387
-## RHmean        9.918238e-05 0.0066979443 0.0054683934 0.0035435379  0.0029622146
-## Agro_ecology2 1.702204e-03 0.1094379855 0.0938505650 0.1115165411  0.1090850625
-## Agro_ecology3 1.613008e-03 0.1094044112 0.0889327325 0.0852984638  0.0890375031
-## Season2       3.021769e-03 0.1612374671 0.1666044080 0.1180234998  0.1053937420
-##                  ZI-NegBin
-## (Intercept)   0.9237880930
-## Rainfall      0.0005351302
-## Tempmean      0.0303129933
-## RHmean        0.0028971405
-## Agro_ecology2 0.1062682422
-## Agro_ecology3 0.0867955224
-## Season2       0.1027962763
-```
-
-```r
-#3rd Comparison
-#The differences of the models become obvious if not only the mean but the full likelihood is
-#considered
-
-rbind(logLik = sapply(fm, function(x) round(logLik(x), digits = 0)),
-      Df = sapply(fm, function(x) attr(logLik(x), "df")))
-```
-
-```
-##            Pois Quasi-Pois NegBin Hurdle-NegBin ZI-NegBin
-## logLik -1219390         NA  -8955         -8921     -8928
-## Df            7          7      8            15        15
-```
-
-```r
-#The Poisson model is clearly inferior to all other fits. The quasi-Poisson model and the
-#sandwich-adjusted Poisson model are not associated with a fitted likelihood. 
-#The negative binomial already improves the fit dramatically but can in turn be improved by 
-#the hurdle model. 
-#The over-dispersion in the data is captured better by the negative-binomial-based models than 
-#the plain Poisson model.
-
-
-#4thComparison of how the zero counts are captured by the various models.
-#Therefore, the observed zero counts are compared to the expected number of zero counts for
-#the likelihood-based models
-
-
-round(c("Obs" = sum(spacioTemp_dt$B_dorsa < 1),
-"Pois" = sum(dpois(0, fitted(Dorsa.output))),
-"NegBin" = sum(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),
-"Hurdle-NegBin" = sum(predict(Dorsa.output3, type = "prob")[,1]),
-"ZI-NegBin" = sum(predict(Dorsa.output4, type = "prob")[,1])))
-```
-
-```
-##           Obs          Pois        NegBin Hurdle-NegBin     ZI-NegBin 
-##            30             0            21            30            39
-```
-
-```r
-#the Poisson model is again not appropriate whereas the negative-binomial-based
-#models are much better in modeling the zero counts. 
-#By construction, the expected number of zero counts in the hurdle model matches the
-#observed number.
-
-#the hurdle and zero-inflation models lead to the best results (in terms of likelihood)
-#on this data set.
-
-
-#5thComparison 
-#fitted zero components
-
-t(sapply(fm[4:5], function(x) round(x$coefficients$zero, digits = 3)))
-```
-
-```
-##               (Intercept) Rainfall Tempmean RHmean Agro_ecology2 Agro_ecology3
-## Hurdle-NegBin      18.130    0.006   -0.541  0.066        14.174        -3.335
-## ZI-NegBin         -18.285   -0.006    0.549 -0.086       -14.174         3.838
-##               Season2
-## Hurdle-NegBin  14.967
-## ZI-NegBin     -14.967
-```
-
-```r
-#The absolute values are rather different as they pertain to slightly different ways of 
-#modeling zero counts - but the signs of the coefficients match, i.e., are just inversed. 
-#For the hurdle model, the zero hurdle component describes the probability of observing a 
-#positive count whereas, for the ZINB model, the zero-inflation component predicts the 
-#probability of observing a zero count from the point mass component.
-
-#Overall, both models lead to the same qualitative results and very similar model.
-#the hurdle model is slightly preferable because it has the nicer interpretation
-```
-
-## Count Model Chosen
-
-### Negative Binomial Model
 
 
 ```r
-#The count data B_dorsa almost assumes a negative binomial distribution as shown in 
-#q-q plots above.
+Dorsa.output5 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season , data = spacioTemp_dt)
 
-#The negative binomial model is the best model to fit the data. 
-
-
-Dorsa.output22 <-glm.nb(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season, data = spacioTemp_dt)
-summary(Dorsa.output22)
+summary(Dorsa.output5)
 ```
 
 ```
 ## 
 ## Call:
-## glm.nb(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
-##     Season, data = spacioTemp_dt, init.theta = 0.6069934279, 
-##     link = log)
+## hurdle(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
+##     Season | Rainfall + Tempmean + RHmean + Agro_ecology + Season, data = spacioTemp_dt)
 ## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -2.7145  -1.1299  -0.5695   0.0688   5.2142  
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -65.513 -20.607  -6.368   1.557 423.574 
 ## 
-## Coefficients:
+## Count model coefficients (truncated poisson with log link):
 ##                 Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    7.0538275  0.8674736   8.131 4.24e-16 ***
-## Rainfall       0.0028047  0.0005844   4.799 1.59e-06 ***
-## Tempmean      -0.0725644  0.0280024  -2.591  0.00956 ** 
-## RHmean         0.0090522  0.0035435   2.555  0.01063 *  
-## Agro_ecology2  0.6403894  0.1115165   5.743 9.33e-09 ***
-## Agro_ecology3 -0.5885592  0.0852985  -6.900 5.20e-12 ***
-## Season2        2.1573507  0.1180235  18.279  < 2e-16 ***
+## (Intercept)    1.733e+00  2.183e-02   79.35   <2e-16 ***
+## Rainfall       7.757e-04  8.472e-06   91.57   <2e-16 ***
+## Tempmean       1.231e-01  6.372e-04  193.26   <2e-16 ***
+## RHmean         7.893e-03  9.847e-05   80.16   <2e-16 ***
+## Agro_ecology2  2.196e-01  1.702e-03  129.03   <2e-16 ***
+## Agro_ecology3 -3.629e-01  1.614e-03 -224.87   <2e-16 ***
+## Season2        2.570e+00  3.001e-03  856.59   <2e-16 ***
+## Zero hurdle model coefficients (binomial with logit link):
+##                 Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    1.816e+01  4.038e+00   4.498 6.87e-06 ***
+## Rainfall       6.313e-03  9.782e-03   0.645  0.51871    
+## Tempmean      -5.415e-01  1.374e-01  -3.942 8.08e-05 ***
+## RHmean         6.641e-02  2.018e-02   3.290  0.00100 ** 
+## Agro_ecology2  1.417e+01  3.035e+03   0.005  0.99627    
+## Agro_ecology3 -3.338e+00  1.029e+00  -3.242  0.00119 ** 
+## Season2        1.496e+01  1.699e+03   0.009  0.99297    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+## 
+## Number of iterations in BFGS optimization: 11 
+## Log-likelihood: -1.212e+06 on 14 Df
+```
+
+
+```r
+round(sum(predict(Dorsa.output5,type="prob")[,1]),0)
+```
+
+```
+## [1] 30
+```
+
+```r
+round(mean(predict(Dorsa.output5,type="prob")[,1]), 4)
+```
+
+```
+## [1] 0.0257
+```
+
+So Hurdle Poisson Model predicts that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+
+We can assess the goodness of fit of the Hurdle Poisson Model using the deviance
+
+
+```r
+df.residual(Dorsa.output5)
+```
+
+```
+## [1] 1152
+```
+
+```r
+qchisq(0.95, df.residual(Dorsa.output5))
+```
+
+```
+## [1] 1232.074
+```
+
+```r
+deviance(Dorsa.output5)
+```
+
+```
+## NULL
+```
+
+```r
+pr5 <- residuals(Dorsa.output5,"pearson")
+
+sum(pr5^2)
+```
+
+```
+## [1] 3288200
+```
+
+
+## Hurdle Negative Binomial Model
+
+The exploratory analysis conveyed the impression that there might be more zero observations than explained by the basic count data distributions, hence a negative binomial hurdle model is fitted
+"y ~ ." is the same as "y ~ . | ."
+
+
+```r
+Dorsa.output6 <-hurdle(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season | Rainfall + Tempmean + RHmean + Agro_ecology + 
+                     Season , data = spacioTemp_dt,  dist = "negbin")
+summary(Dorsa.output6)
+```
+
+```
+## 
+## Call:
+## hurdle(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
+##     Season | Rainfall + Tempmean + RHmean + Agro_ecology + Season, data = spacioTemp_dt, 
+##     dist = "negbin")
+## 
+## Pearson residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.80426 -0.65683 -0.45072  0.06684 19.63759 
+## 
+## Count model coefficients (truncated negbin with log link):
+##                 Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    6.4356910  0.9498182   6.776 1.24e-11 ***
+## Rainfall       0.0027446  0.0005498   4.992 5.99e-07 ***
+## Tempmean      -0.0486049  0.0311973  -1.558  0.11924    
+## RHmean         0.0076842  0.0029603   2.596  0.00944 ** 
+## Agro_ecology2  0.6427327  0.1091455   5.889 3.89e-09 ***
+## Agro_ecology3 -0.5080704  0.0890946  -5.703 1.18e-08 ***
+## Season2        2.2023052  0.1055372  20.868  < 2e-16 ***
+## Log(theta)    -0.4706418  0.0416690 -11.295  < 2e-16 ***
+## Zero hurdle model coefficients (binomial with logit link):
+##                 Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    1.816e+01  4.038e+00   4.498 6.87e-06 ***
+## Rainfall       6.313e-03  9.782e-03   0.645  0.51871    
+## Tempmean      -5.415e-01  1.374e-01  -3.942 8.08e-05 ***
+## RHmean         6.641e-02  2.018e-02   3.290  0.00100 ** 
+## Agro_ecology2  1.417e+01  3.035e+03   0.005  0.99627    
+## Agro_ecology3 -3.338e+00  1.029e+00  -3.242  0.00119 ** 
+## Season2        1.496e+01  1.699e+03   0.009  0.99297    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+## 
+## Theta: count = 0.6246
+## Number of iterations in BFGS optimization: 15 
+## Log-likelihood: -8921 on 15 Df
+```
+The increase in the log-likelihood from -8954.9715(NB); -8929(ZI-NB) to -8921 conveys that the Hurdle negative binomial model has improved by including the hurdle component.
+
+
+
+```r
+round(sum(predict(Dorsa.output6,type="prob")[,1]),0)
+```
+
+```
+## [1] 30
+```
+
+```r
+round(mean(predict(Dorsa.output6,type="prob")[,1]), 4)
+```
+
+```
+## [1] 0.0257
+```
+
+So Hurdle negative binomial Model predicts that 2.57% (n=30) of the sites in the sample will have no abundance of Bactrocera dorsalis in the crops, same as the observed value of 2.57% (n=30).
+
+
+We can assess the goodness of fit of the Hurdle negative binomial Model using the deviance
+
+
+```r
+df.residual(Dorsa.output6)
+```
+
+```
+## [1] 1151
+```
+
+```r
+qchisq(0.95, df.residual(Dorsa.output6))
+```
+
+```
+## [1] 1231.039
+```
+
+```r
+deviance(Dorsa.output6)
+```
+
+```
+## NULL
+```
+
+```r
+pr6 <- residuals(Dorsa.output6,"pearson")
+
+sum(pr6^2)
+```
+
+```
+## [1] 2163.243
+```
+
+
+
+```r
+Dorsa.output6h <-hurdle(formula = B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
+                        , data = spacioTemp_dt,  dist = "negbin")
+
+#comparing to the full model in a Wald test
+
+waldtest(Dorsa.output6, Dorsa.output6h)
+```
+
+```
+## Wald test
+## 
+## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season | 
+##     Rainfall + Tempmean + RHmean + Agro_ecology + Season
+## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
+##   Res.Df Df  Chisq Pr(>Chisq)    
+## 1   1151                         
+## 2   1159 -8 682.86  < 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for Negative Binomial(0.607) family taken to be 1)
-## 
-##     Null deviance: 2592.1  on 1165  degrees of freedom
-## Residual deviance: 1430.0  on 1159  degrees of freedom
-## AIC: 17926
-## 
-## Number of Fisher Scoring iterations: 1
-## 
-## 
-##               Theta:  0.6070 
-##           Std. Err.:  0.0218 
-## 
-##  2 x log-likelihood:  -17909.9430
 ```
 
 ```r
-#The coefficient estimates for Rainfall, Tempmean RHmean, Agro_ecology2(FSM), Agro_ecology3(NGS), 
-#Season 2(Rainy) are all significant.
-
-
-#Estimated Negative Binomial Regression Model
-#B_dorsa =  Exp(7.0538275 + 0.0028047*(Rainfall) - 0.0725644*(Tempmean) + 0.0090522*(RHmean) + 
-#0.6403894*(Agro_ecology2(FSM)) - 0.5885592*(Agro_ecology3(NGS)) + 2.1573507*(Season2(Rainy)))
-
-#For each one-unit increase in Rainfall, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis increases by 0.0028047 holding the other variables constant.
-
-#For each one-unit increase in Tempmean, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis decreases by 0.0725644 holding the other variables constant.
-
-#For each one-unit increase in RHmean, the difference in expected log count of the number of 
-#abundance of Bactrocera dorsalis increases by 0.0090522 holding the other variables constant.
-
-#The indicator variable shown as Agro_ecology2(FSM) is the expected difference in log count between
-#group 2 and the reference group (Agro_ecology1=1). The expected log count for Agro_ecology 
-#level 2(FSM) is 0.64 higher than the expected log count for level 1(SGS) holding the other 
-#variables constant.
-
-#The indicator variable shown as Agro_ecology3(NGS) is the expected difference in log count between
-#group 3 and the reference group (Agro_ecology1=1). The expected log count for Agro_ecology 
-#level 3(NGS) is 0.59 lower than the expected log count for level 1(SGS) holding the other 
-#variables constant.
-
-#The indicator variable shown as Season2(Rainy) is the expected difference in log count between
-#group 2 and the reference group (Season1=1). The expected log count for Season level 2(Rainy) 
-#of is 2.16 higher than the expected log count for level 1(Dry) holding the other 
-#variables constant.
-
-
-
-#We can get the confidence intervals for the coefficients by profiling the likelihood function.
-
-(est <- cbind(Estimate = coef(Dorsa.output22), confint(Dorsa.output22)))
+#or an LR test
+lrtest(Dorsa.output6, Dorsa.output6h)
 ```
 
 ```
-##                   Estimate        2.5 %       97.5 %
-## (Intercept)    7.053827498  5.212912091  8.900508319
-## Rainfall       0.002804711  0.001706701  0.003907246
-## Tempmean      -0.072564393 -0.132946923 -0.011828997
-## RHmean         0.009052247  0.003196393  0.014710456
-## Agro_ecology2  0.640389357  0.426291042  0.860680279
-## Agro_ecology3 -0.588559195 -0.763327445 -0.413838181
-## Season2        2.157350684  1.949219327  2.365072170
+## Likelihood ratio test
+## 
+## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season | 
+##     Rainfall + Tempmean + RHmean + Agro_ecology + Season
+## Model 2: B_dorsa ~ Tempmean + RHmean | Tempmean + RHmean
+##   #Df  LogLik Df  Chisq Pr(>Chisq)    
+## 1  15 -8921.1                         
+## 2   7 -9184.5 -8 526.73  < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
+
+By omitting Rainfall, Agro_ecology and Season variables, the fit changes significantly.
+
+
+## Comparison of the Count Models
+
+Having fitted several count data regression models to the abundance of Bactrocera-dorsalis in the spacioTemp data, it is of interest to understand what these models have in common and what their differences are.
+
+
+### Estimates/Regression coefficients
+
+1st comparison, we inspect the estimated regression coefficients in the count data models
+
 
 ```r
-#We can be interested in looking at incident rate ratios rather than coefficients. To do this, we
-#exponentiate our model coefficients. The same applies to the confidence intervals.
+Dorsa.outputa <- coeftest(Dorsa.output, vcov = sandwich)
 
+fm <- list("Pois" = Dorsa.output, "Adj-Pois" = Dorsa.outputa,
+            "Quasi-Pois" = Dorsa.output1, "NegBin" = Dorsa.output2,
+            "ZI-Pois" = Dorsa.output3, "ZI-NegBin" = Dorsa.output4,
+           "Hurdle-Pois" = Dorsa.output5, "Hurdle-NegBin" = Dorsa.output6)
+
+round(sapply(fm, function(x) coef(x)[1:7]), 4)
+```
+
+```
+##                  Pois Adj-Pois Quasi-Pois  NegBin ZI-Pois ZI-NegBin Hurdle-Pois
+## (Intercept)    1.6543   1.6543     1.6543  7.0239  1.7326    8.0471      1.7326
+## Rainfall       0.0008   0.0008     0.0008  0.0028  0.0008    0.0026      0.0008
+## Tempmean       0.1233   0.1233     0.1233 -0.0716  0.1231   -0.0995      0.1231
+## RHmean         0.0086   0.0086     0.0086  0.0091  0.0079    0.0062      0.0079
+## Agro_ecology2  0.2174   0.2174     0.2174  0.6411  0.2196    0.6413      0.2196
+## Agro_ecology3 -0.3729  -0.3729    -0.3729 -0.5878 -0.3629   -0.5758     -0.3629
+## Season2        2.5931   2.5931     2.5931  2.1583  2.5704    2.1276      2.5705
+##               Hurdle-NegBin
+## (Intercept)          6.4357
+## Rainfall             0.0027
+## Tempmean            -0.0486
+## RHmean               0.0077
+## Agro_ecology2        0.6427
+## Agro_ecology3       -0.5081
+## Season2              2.2023
+```
+
+### Standard Errors
+
+2nd comparison the associated estimated standard errors
+
+
+```r
+round(cbind("Pois" = sqrt(diag(vcov(Dorsa.output))), "Adj-Pois" = sqrt(diag(sandwich(Dorsa.output))),
+      sapply(fm[-(1:2)], function(x) sqrt(diag(vcov(x)))[1:7])),4)
+```
+
+```
+##                 Pois Adj-Pois Quasi-Pois NegBin ZI-Pois ZI-NegBin Hurdle-Pois
+## (Intercept)   0.0219   1.2961     1.2081 0.8681      NA    0.9353      0.0218
+## Rainfall      0.0000   0.0005     0.0005 0.0006      NA    0.0005      0.0000
+## Tempmean      0.0006   0.0359     0.0352 0.0280      NA    0.0305      0.0006
+## RHmean        0.0001   0.0067     0.0055 0.0035      NA    0.0030      0.0001
+## Agro_ecology2 0.0017   0.1094     0.0938 0.1115      NA    0.1062      0.0017
+## Agro_ecology3 0.0016   0.1094     0.0889 0.0853      NA    0.0875      0.0016
+## Season2       0.0030   0.1612     0.1667 0.1181      NA    0.1034      0.0030
+##               Hurdle-NegBin
+## (Intercept)          0.9498
+## Rainfall             0.0005
+## Tempmean             0.0312
+## RHmean               0.0030
+## Agro_ecology2        0.1091
+## Agro_ecology3        0.0891
+## Season2              0.1055
+```
+
+### Log-Likelihood & AIC
+
+3rd Comparison The differences of the models become obvious if not only the mean but the full likelihood is considered.
+
+
+```r
+rbind(logLik = sapply(fm, function(x) round(logLik(x), digits = 0)),
+      Df = sapply(fm, function(x) attr(logLik(x), "df")),
+      aic = sapply(fm, function(x) round(AIC(x), digits = 0)))
+```
+
+```
+##            Pois Adj-Pois Quasi-Pois NegBin  ZI-Pois ZI-NegBin Hurdle-Pois
+## logLik -1218949 -1218949         NA  -8955 -1212275     -8929    -1212275
+## Df            7        7          7      8       14        15          14
+## aic     2437912  2437912         NA  17926  2424577     17889     2424577
+##        Hurdle-NegBin
+## logLik         -8921
+## Df                15
+## aic            17872
+```
+
+The Poisson model is clearly inferior to all other fits. The quasi-Poisson model is not associated with a fitted likelihood and Akaike's Information Criterion (AIC). 
+
+The negative binomial already improves the fit dramatically but can in turn be improved by 
+the zero inflated and hurdle model. 
+
+The over-dispersion in the data is captured better by the negative-binomial-based models than 
+the Poisson models.
+
+
+### df.residual, five-percent critical value of df.residual, deviance & Residuals Pearson's chi-squared
+
+4th comparison
+
+
+```r
+rbind(df_residual = sapply(fm[-2], function(x) round(df.residual(x), digits = 0)),
+      criticalvalue = sapply(fm[-2], function(x) round(qchisq(0.95, df.residual(x)), digits = 0)),
+      dev = sapply(fm[-2], function(x) deviance(x)),
+      resid.Pearson = sapply(fm[-2], function(x) round(sum((residuals(x,"pearson"))^2), 0))
+      )
+```
+
+```
+##               Pois    Quasi-Pois NegBin   ZI-Pois ZI-NegBin Hurdle-Pois
+## df_residual   1159    1159       1159     1152    1151      1152       
+## criticalvalue 1239    1239       1239     1232    1231      1232       
+## dev           2429048 2429048    1430.006 NULL    NULL      NULL       
+## resid.Pearson 3520646 3520646    2203     3288193 2303      3288200    
+##               Hurdle-NegBin
+## df_residual   1151         
+## criticalvalue 1231         
+## dev           NULL         
+## resid.Pearson 2163
+```
+
+
+### zero counts
+
+5thComparison of how the zero counts are captured by the various models. Therefore, the observed zero counts are compared to the expected number of zero counts for the likelihood-based models.
+
+
+
+```r
+round( cbind("Obs" = sum(spacioTemp_dt$B_dorsa < 1),
+"Pois" = sum(dpois(0, fitted(Dorsa.output))),
+"NegBin" = sum(dnbinom(0, mu = fitted(Dorsa.output2), size = Dorsa.output2$theta)),
+ "ZI-Pois" = sum(predict(Dorsa.output3, type = "prob")[,1]),
+ "ZI-NegBin" = sum(predict(Dorsa.output4, type = "prob")[,1]),
+"Hurdle-Pois" = sum(predict(Dorsa.output5, type = "prob")[,1]),
+"Hurdle-NegBin" = sum(predict(Dorsa.output6, type = "prob")[,1])))
+```
+
+```
+##      Obs Pois NegBin ZI-Pois ZI-NegBin Hurdle-Pois Hurdle-NegBin
+## [1,]  30    0     21      30        38          30            30
+```
+
+The plain Poisson model is again not appropriate whereas the negative-binomial-based
+models are much better in modeling the zero counts. 
+
+By construction, the expected number of zero counts in the hurdle models and Zero Inflated Poisson model matches the observed number.
+
+
+### Fitted zero components
+
+6thComparison
+
+
+```r
+t(sapply(fm[5:8], function(x) round(x$coefficients$zero, digits = 3)))
+```
+
+```
+##               (Intercept) Rainfall Tempmean RHmean Agro_ecology2 Agro_ecology3
+## ZI-Pois            -18.16   -0.006    0.541 -0.066       -14.171         3.338
+## ZI-NegBin          -18.16   -0.007    0.558 -0.085       -14.171         3.339
+## Hurdle-Pois         18.16    0.006   -0.541  0.066        14.171        -3.338
+## Hurdle-NegBin       18.16    0.006   -0.541  0.066        14.171        -3.338
+##               Season2
+## ZI-Pois       -14.964
+## ZI-NegBin     -14.964
+## Hurdle-Pois    14.964
+## Hurdle-NegBin  14.964
+```
+
+The absolute values are rather different as they pertain to slightly different ways of modeling zero counts - but the signs of the coefficients match, i.e., are just inversed. 
+
+For the hurdle models, the zero hurdle component describes the probability of observing a positive count whereas, for the Zero Inflated models, the zero-inflation component predicts the 
+probability of observing a zero count from the point mass component.
+
+Overall, both models lead to the same qualitative results and very similar model. the hurdle model is slightly preferable because it has the nicer interpretation.
+
+Comparing hurdle and zero-inflated models, the distinction between zero and one or more is clearer with hurdle models, but the interpretation of the mean is clearer with zero-inflated models.
+
+
+## Count Model Chosen
+
+### Hurdle Negative Binomial Model
+
+The count data B_dorsa almost assumes a negative binomial distribution as shown in q-q plots above.
+
+The Hurdle negative binomial model is the best model to fit the data.
+
+
+```r
+summary(Dorsa.output6)
+```
+
+```
+## 
+## Call:
+## hurdle(formula = B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + 
+##     Season | Rainfall + Tempmean + RHmean + Agro_ecology + Season, data = spacioTemp_dt, 
+##     dist = "negbin")
+## 
+## Pearson residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.80426 -0.65683 -0.45072  0.06684 19.63759 
+## 
+## Count model coefficients (truncated negbin with log link):
+##                 Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    6.4356910  0.9498182   6.776 1.24e-11 ***
+## Rainfall       0.0027446  0.0005498   4.992 5.99e-07 ***
+## Tempmean      -0.0486049  0.0311973  -1.558  0.11924    
+## RHmean         0.0076842  0.0029603   2.596  0.00944 ** 
+## Agro_ecology2  0.6427327  0.1091455   5.889 3.89e-09 ***
+## Agro_ecology3 -0.5080704  0.0890946  -5.703 1.18e-08 ***
+## Season2        2.2023052  0.1055372  20.868  < 2e-16 ***
+## Log(theta)    -0.4706418  0.0416690 -11.295  < 2e-16 ***
+## Zero hurdle model coefficients (binomial with logit link):
+##                 Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    1.816e+01  4.038e+00   4.498 6.87e-06 ***
+## Rainfall       6.313e-03  9.782e-03   0.645  0.51871    
+## Tempmean      -5.415e-01  1.374e-01  -3.942 8.08e-05 ***
+## RHmean         6.641e-02  2.018e-02   3.290  0.00100 ** 
+## Agro_ecology2  1.417e+01  3.035e+03   0.005  0.99627    
+## Agro_ecology3 -3.338e+00  1.029e+00  -3.242  0.00119 ** 
+## Season2        1.496e+01  1.699e+03   0.009  0.99297    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+## 
+## Theta: count = 0.6246
+## Number of iterations in BFGS optimization: 15 
+## Log-likelihood: -8921 on 15 Df
+```
+
+We can get the confidence intervals for the coefficients by profiling the likelihood function.
+
+
+
+```r
+(est <- cbind(Estimate = coef(Dorsa.output6), confint(Dorsa.output6)))
+```
+
+```
+##                         Estimate         2.5 %        97.5 %
+## count_(Intercept)    6.435690985  4.574082e+00  8.297300e+00
+## count_Rainfall       0.002744640  1.666956e-03  3.822325e-03
+## count_Tempmean      -0.048604929 -1.097505e-01  1.254065e-02
+## count_RHmean         0.007684164  1.881996e-03  1.348633e-02
+## count_Agro_ecology2  0.642732709  4.288114e-01  8.566540e-01
+## count_Agro_ecology3 -0.508070393 -6.826925e-01 -3.334483e-01
+## count_Season2        2.202305162  1.995456e+00  2.409154e+00
+## zero_(Intercept)    18.160358851  1.024642e+01  2.607430e+01
+## zero_Rainfall        0.006312733 -1.285998e-02  2.548544e-02
+## zero_Tempmean       -0.541499312 -8.107376e-01 -2.722610e-01
+## zero_RHmean          0.066411711  2.685145e-02  1.059720e-01
+## zero_Agro_ecology2  14.171004036 -5.933698e+03  5.962040e+03
+## zero_Agro_ecology3  -3.337712634 -5.355386e+00 -1.320039e+00
+## zero_Season2        14.963704472 -3.314310e+03  3.344237e+03
+```
+
+
+We can be interested in looking at incident rate ratios rather than coefficients. To do this, we
+exponentiate our model coefficients. The same applies to the confidence intervals.
+
+
+```r
 exp(est)
 ```
 
 ```
-##                   Estimate       2.5 %       97.5 %
-## (Intercept)   1157.2797627 183.6280218 7335.7014681
-## Rainfall         1.0028086   1.0017082    1.0039149
-## Tempmean         0.9300059   0.8755116    0.9882407
-## RHmean           1.0090933   1.0032015    1.0148192
-## Agro_ecology2    1.8972194   1.5315665    2.3647689
-## Agro_ecology3    0.5551265   0.4661129    0.6611079
-## Season2          8.6481955   7.0232026   10.6448070
+##                         Estimate        2.5 %       97.5 %
+## count_(Intercept)   6.237134e+02 9.693896e+01 4.013024e+03
+## count_Rainfall      1.002748e+00 1.001668e+00 1.003830e+00
+## count_Tempmean      9.525574e-01 8.960577e-01 1.012620e+00
+## count_RHmean        1.007714e+00 1.001884e+00 1.013578e+00
+## count_Agro_ecology2 1.901670e+00 1.535431e+00 2.355267e+00
+## count_Agro_ecology3 6.016554e-01 5.052547e-01 7.164490e-01
+## count_Season2       9.045842e+00 7.355557e+00 1.112455e+01
+## zero_(Intercept)    7.708034e+07 2.818152e+04 2.108254e+11
+## zero_Rainfall       1.006333e+00 9.872224e-01 1.025813e+00
+## zero_Tempmean       5.818752e-01 4.445301e-01 7.616554e-01
+## zero_RHmean         1.068667e+00 1.027215e+00 1.111791e+00
+## zero_Agro_ecology2  1.426885e+06 0.000000e+00          Inf
+## zero_Agro_ecology3  3.551811e-02 4.722644e-03 2.671249e-01
+## zero_Season2        3.152494e+06 0.000000e+00          Inf
 ```
 
-```r
-#For every unit increase in Rainfall, the incident rate for the abundance of 
-#Bactrocera dorsalis increases by factor of 1.003 holding the other variables constant.
 
-#For every unit increase in Tempmean, the incident rate for the abundance of 
-#Bactrocera dorsalis decreases by factor of 0.93 holding the other variables constant.
-
-#For every unit increase in RHmean, the incident rate for the abundance of 
-#Bactrocera dorsalis increases by factor of 1.009 holding the other variables constant.
-
-# The incident rate for Agro_ecology level 2(FSM) is 1.897 times the incident rate for the 
-#reference group Agro_ecology level 1(SGS) while holding all other variables in the model constant.
-
-#The incident rate for Agro_ecology level 3(NGS) is 0.555 times the incident rate for the
-#reference group Agro_ecology level 1(SGS) while holding all other variables in the model constant.
-
-#The incident rate for Season level 2(Rainy) is 8.648 times the incident rate for the 
-#reference group Season level 1(Dry) while holding all other variables in the model constant.
-```
-
-### Overall significance for Agro_ecology and Season
-
-
-```r
-#The reason it is important to fit separate models, is that unless we do, the overdispersion 
-#parameter is held constant.
-
-
-Dorsa.output22A <- update(Dorsa.output22, . ~ . - Agro_ecology)
-anova(Dorsa.output22, Dorsa.output22A)
-```
-
-```
-## Likelihood ratio tests of Negative Binomial Models
-## 
-## Response: B_dorsa
-##                                                  Model     theta Resid. df
-## 1                Rainfall + Tempmean + RHmean + Season 0.5643720      1161
-## 2 Rainfall + Tempmean + RHmean + Agro_ecology + Season 0.6069934      1159
-##      2 x log-lik.   Test    df LR stat. Pr(Chi)
-## 1       -18024.19                              
-## 2       -17909.94 1 vs 2     2 114.2461       0
-```
-
-```r
-waldtest(Dorsa.output22, Dorsa.output22A)
-```
-
-```
-## Wald test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Season
-##   Res.Df Df      F    Pr(>F)    
-## 1   1159                        
-## 2   1161 -2 57.788 < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-lrtest(Dorsa.output22, Dorsa.output22A)
-```
-
-```
-## Likelihood ratio test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Season
-##   #Df  LogLik Df  Chisq Pr(>Chisq)    
-## 1   8 -8955.0                         
-## 2   6 -9012.1 -2 114.25  < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-#The two degree-of-freedom chi-square test indicates that Agro_ecology is a statistically 
-#significant predictor of B_dorsa.
-
-
-Dorsa.output22S <- update(Dorsa.output22, . ~ . - Season)
-anova(Dorsa.output22, Dorsa.output22S)
-```
-
-```
-## Likelihood ratio tests of Negative Binomial Models
-## 
-## Response: B_dorsa
-##                                                  Model     theta Resid. df
-## 1          Rainfall + Tempmean + RHmean + Agro_ecology 0.4859519      1160
-## 2 Rainfall + Tempmean + RHmean + Agro_ecology + Season 0.6069934      1159
-##      2 x log-lik.   Test    df LR stat. Pr(Chi)
-## 1       -18264.31                              
-## 2       -17909.94 1 vs 2     1 354.3671       0
-```
-
-```r
-waldtest(Dorsa.output22, Dorsa.output22S)
-```
-
-```
-## Wald test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology
-##   Res.Df Df      F    Pr(>F)    
-## 1   1159                        
-## 2   1160 -1 334.12 < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-lrtest(Dorsa.output22, Dorsa.output22S)
-```
-
-```
-## Likelihood ratio test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology
-##   #Df  LogLik Df  Chisq Pr(>Chisq)    
-## 1   8 -8955.0                         
-## 2   7 -9132.2 -1 354.37  < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-#The one degree-of-freedom chi-square test indicates that Season is a statistically 
-#significant predictor of B_dorsa.
-```
-
-### Checking Model Assumption
-
-
-```r
-#Negative binomial models assume the conditional means are not equal to the conditional variances. 
-#This inequality is captured by estimating a dispersion parameter (not shown in the output) that is 
-#held constant in a Poisson model. Thus, the Poisson model is actually nested in the negative binomial 
-#model. We can then use a likelihood ratio test to compare these two and test this model assumption.
-
-
-Dorsa.output0 <-glm(formula = B_dorsa ~  Rainfall + Tempmean + RHmean + Agro_ecology + 
-                     Season, data = spacioTemp_dt, family = poisson)
-pchisq(2 * (logLik(Dorsa.output22) - logLik(Dorsa.output0)), df = 1, lower.tail = FALSE)
-```
-
-```
-## 'log Lik.' 0 (df=8)
-```
-
-```r
-#the associated chi-squared value estimated from 2*(logLik(m1) – logLik(m3)) is 2420871 with one 
-#degree of freedom. This strongly suggests the negative binomial model, estimating the dispersion 
-#parameter, is more appropriate than the Poisson model.
-
-#or an LR test
-lrtest(Dorsa.output22, Dorsa.output0)
-```
-
-```
-## Likelihood ratio test
-## 
-## Model 1: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-## Model 2: B_dorsa ~ Rainfall + Tempmean + RHmean + Agro_ecology + Season
-##   #Df   LogLik Df   Chisq Pr(>Chisq)    
-## 1   8    -8955                          
-## 2   7 -1219390 -1 2420871  < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-### Prediction of Negative Binomial Model
+### Prediction of Hurdle Negative Binomial model & Negative Binomial Model
 
 
 ```r
 #Observed value in data is 7758
 
-lapply(df, levels)
-```
 
-```
-## $x
-## NULL
-## 
-## $df1
-## NULL
-## 
-## $df2
-## NULL
-## 
-## $ncp
-## NULL
-## 
-## $log
-## NULL
-## 
-## [[6]]
-## NULL
-```
-
-```r
 #The Negative Binomial model
 newdata <- data.frame(Agro_ecology = "2" , Rainfall =0, Tempmean=26.2, RHmean=81.8, Season = "2" )
 
 
-NB <- predict(Dorsa.output22, newdata, type = "response")
+NB <- predict(Dorsa.output2, newdata, type = "response")
 NB
 ```
 
 ```
 ##        1 
-## 5948.261
+## 5944.383
 ```
 
 ```r
-spacioTemp_dt$PredictB_dorsa <- round(predict(Dorsa.output22, spacioTemp_dt, type = "response"),0)
+spacioTemp_dt$PredictB_dorsaNB <- round(predict(Dorsa.output2, spacioTemp_dt, type = "response"),0)
+
+#The Hurdle Negative Binomial model
+
+HNB <- predict(Dorsa.output6, newdata, type = "response")
+HNB
+```
+
+```
+##        1 
+## 5649.015
+```
+
+```r
+spacioTemp_dt$PredictB_dorsaHNB <- round(predict(Dorsa.output6, spacioTemp_dt, type = "response"),0)
 ```
 
 
 ## Mapping the Abundance of B_Dorsa
 
+
 ```r
 #library(devtools)
 #install_github("ropensci/rnaturalearthhires")
 
-spacioTemp_dtnew <- spacioTemp_dt
-spacioTemp_dtnew$Site <- gsub("Alafiarou1", "Alafiarou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Alafiarou2", "Alafiarou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Tchourou1", "Tchourou", spacioTemp_dtnew$Site)
-spacioTemp_dtnew$Site <- gsub("Tchourou2", "Tchourou", spacioTemp_dtnew$Site)
-
-spacioTemp_dtnew$Agro_ecology <- factor(spacioTemp_dtnew$Agro_ecology, levels = c("1","2","3"), 
-                               labels = c("SGS","FSM","NGS"))
-
-spacioTemp_dtnew$Season <- factor(spacioTemp_dtnew$Season, levels = c("1","2"), 
-                               labels = c("Dry","Rainy"))
+spacioTemp_dtnew <- spacioTemp_dt%>%
+mutate(Site = gsub("Alafiarou1", "Alafiarou", Site))%>%
+mutate(Site = gsub("Alafiarou2", "Alafiarou", Site))%>%
+mutate(Site = gsub("Tchourou1", "Tchourou", Site))%>%
+mutate(Site = gsub("Tchourou2", "Tchourou", Site))%>%
+mutate(Agro_ecology = factor(Agro_ecology, levels = c("1","2","3"), 
+                               labels = c("SGS","FSM","NGS")))%>%
+mutate(Season = factor(Season, levels = c("1","2"), 
+                               labels = c("Dry","Rainy")))
 
 
-spacioTemp_dt1 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'Season', 'latitude' , 'longitude')]
-spacioTemp_dt1$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt1,FUN=sum)
-spacioTemp_dt1 <- spacioTemp_dt1[!duplicated(spacioTemp_dt1),]
+spacioTemp_dt1 <- spacioTemp_dtnew%>%
+  dplyr:: select(Agro_ecology, Site, Season, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Agro_ecology, Site, Season, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
 
-spacioTemp_dt2 <- spacioTemp_dtnew[,c('Agro_ecology', 'Site', 'latitude' , 'longitude')]
-spacioTemp_dt2$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt2,FUN=sum)
-spacioTemp_dt2 <- spacioTemp_dt2[!duplicated(spacioTemp_dt2),]
+spacioTemp_dt2 <- spacioTemp_dtnew%>%
+  dplyr:: select(Agro_ecology, Site, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Agro_ecology, Site, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
 
-spacioTemp_dt3 <- spacioTemp_dtnew[,c('Site', 'latitude' , 'longitude')]
-spacioTemp_dt3$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt3,FUN=sum)
-spacioTemp_dt3 <- spacioTemp_dt3[!duplicated(spacioTemp_dt3),]
+spacioTemp_dt3 <- spacioTemp_dtnew%>%
+  dplyr:: select(Site, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Site, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
 
-spacioTemp_dt4 <- spacioTemp_dtnew[,c('Site', 'Season', 'latitude' , 'longitude')]
-spacioTemp_dt4$TotalB_dorsa <- ave(spacioTemp_dtnew$B_dorsa,spacioTemp_dt4,FUN=sum)
-spacioTemp_dt4 <- spacioTemp_dt4[!duplicated(spacioTemp_dt4),]
+spacioTemp_dt4 <- spacioTemp_dtnew%>%
+  dplyr:: select( Site, Season, latitude , longitude, B_dorsa)%>%
+  dplyr:: group_by(Site, Season, latitude , longitude)%>% 
+  dplyr:: summarise(TotalB_dorsa = sum(B_dorsa), .groups = 'drop')
+```
 
 
+
+```r
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(rnaturalearthhires)
@@ -2313,7 +2802,7 @@ geom_sf_text(aes(label = name), size = 2, color = "blue")+
   labs(x="longitude", y="latitude")
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
 
 ```r
 benin1 <- ne_states(country = "Benin", returnclass = "sf") 
@@ -2332,7 +2821,7 @@ geom_sf_text(aes(label = name), size = 2, color = "blue")+
   theme(axis.text.x = element_text(size = 8))
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-2.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-48-2.png)<!-- -->
 
 ```r
 benin <- ne_states(country = "Benin", returnclass = "sf") 
@@ -2343,19 +2832,22 @@ class(benin)
 ## [1] "sf"         "data.frame"
 ```
 
+
+
 ```r
 ggplot(data = benin) +
 geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, colour=TotalB_dorsa), size=2.5) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
 scale_colour_gradient2(low="green", mid="yellow", high="red", midpoint=191000)+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-49-1.png)<!-- -->
 
 ```r
 ggplot(data = benin) +
@@ -2363,12 +2855,13 @@ geom_sf()+
 ggtitle("Site Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt3, aes(x=longitude, y=latitude, size=TotalB_dorsa), colour="red")+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt3, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-4.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-49-2.png)<!-- -->
 
 ```r
 ggplot(data = benin) +
@@ -2376,12 +2869,15 @@ geom_sf()+
 ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-5.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-49-3.png)<!-- -->
+
+
 
 ```r
 ggplot(data = benin) +
@@ -2390,13 +2886,14 @@ ggtitle("Agro ecology Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt2, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+
   facet_wrap(~Agro_ecology) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+ 
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+ 
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt2, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-6.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-50-1.png)<!-- -->
 
 ```r
 ggplot(data = benin) +
@@ -2405,13 +2902,14 @@ ggtitle("Season Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt4, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Season))+ 
   facet_wrap(~Season) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(size = 8))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(size = 8))+
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt4, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-7.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-50-2.png)<!-- -->
 
 ```r
 ggplot(data = benin) +
@@ -2420,13 +2918,14 @@ ggtitle("Agro Ecology/Season Abundance of Bactrocera dorsalis") +
 geom_point(data=spacioTemp_dt1, aes(x=longitude, y=latitude, size=TotalB_dorsa, colour=Agro_ecology))+ 
   facet_grid(Season~Agro_ecology) +
 theme(legend.position = "right", legend.box = "vertical", legend.text = element_text(size=8),
-legend.title = element_text(colour="blue", size=10, face="bold"), axis.text.x = element_text(angle = 90, size = 7))+
+legend.title = element_text(colour="blue", size=10, face="bold"), 
+axis.text.x = element_text(angle = 90, size = 7))+
   guides(color = FALSE)+
   geom_text_repel(data=spacioTemp_dt1, aes(x=longitude, y=latitude,label=Site, vjust = -0.8),
                   size=2.2, point.padding = NA)
 ```
 
-![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-17-8.png)<!-- -->
+![](Spatio-Temporal_patterns_Bactrocera-dorsalis_files/figure-html/unnamed-chunk-50-3.png)<!-- -->
 
 
 
